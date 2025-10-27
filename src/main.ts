@@ -1,14 +1,23 @@
 import './style.css';
-import { mainnet, polygon } from 'viem/chains';
+import { mainnet, polygon, base, bsc } from 'viem/chains';
 import { InjectedConnector } from './adapters/injected/connector';
 import { EIP6963Connector } from './adapters/eip6963/connector';
 import { watchEIP6963Wallets } from './adapters/eip6963/discovery';
 import type { EIP6963ProviderDetail } from './adapters/eip6963/types';
+import { CoinbaseSmartWalletConnector } from './adapters/base-account/connector';
 
 // 创建 Injected 连接器（传统方式）
 const connector = new InjectedConnector({
-	chains: [mainnet, polygon],
+	chains: [mainnet, polygon, bsc],
 	shimDisconnect: true
+});
+
+// 创建 Coinbase Smart Wallet 连接器
+const coinbaseConnector = new CoinbaseSmartWalletConnector({
+	chains: [mainnet, polygon, base, bsc],
+	shimDisconnect: true,
+	appName: 'Ethereum Connectors Demo',
+	appLogoUrl: 'https://example.com/logo.png'
 });
 
 // 存储 EIP-6963 发现的钱包连接器
@@ -25,6 +34,20 @@ connector.on('permissionChanged', (info) => {
 });
 connector.on('error', (error: Error) => {
 	console.log('error', { error });
+});
+
+// Coinbase 连接器事件监听
+coinbaseConnector.on('connected', (info) => {
+	console.log('[Coinbase] connected', { info });
+});
+coinbaseConnector.on('disconnected', () => {
+	console.log('[Coinbase] disconnected');
+});
+coinbaseConnector.on('permissionChanged', (info) => {
+	console.log('[Coinbase] permissionChanged', { info });
+});
+coinbaseConnector.on('error', (error: Error) => {
+	console.log('[Coinbase] error', { error });
 });
 
 // 辅助函数：格式化地址
@@ -170,6 +193,128 @@ export function switchaccount(element: HTMLButtonElement) {
 	};
 	element.addEventListener('click', () => void handle());
 }
+
+// ==================== Coinbase Smart Wallet Functions ====================
+
+export function setupCoinbase(element: HTMLButtonElement) {
+	const coinbaseInfo = document.querySelector('#coinbase-info') as HTMLDivElement;
+	const connectionInfo = document.querySelector('#coinbase-connection-info') as HTMLDivElement;
+	const connectorChains = document.querySelector('#coinbase-connector-chains') as HTMLDivElement;
+	const dappChains = document.querySelector('#coinbase-dapp-chains') as HTMLDivElement;
+	const disconnectBtn = document.querySelector('#coinbase-disconnect') as HTMLButtonElement;
+	const switchChainBtn = document.querySelector('#coinbase-switchchain') as HTMLButtonElement;
+	const switchAccountBtn = document.querySelector('#coinbase-switchaccount') as HTMLButtonElement;
+
+	const handle = async () => {
+		console.log('Coinbase connect button clicked', coinbaseConnector);
+		if (coinbaseConnector.ready) {
+			const result = await coinbaseConnector.connect(8453); // Connect to Base
+			const chainId = await coinbaseConnector.getChainId();
+			const account = await coinbaseConnector.getAccount();
+			const metadata = coinbaseConnector.getMetadata();
+			const supportedChains = coinbaseConnector.getSupportedChains();
+
+			console.log({ result, chainId, account, metadata, supportedChains });
+
+			// 显示连接信息
+			connectionInfo.innerHTML = `
+				<div>Address: <span style="color: #646cff; font-family: monospace;">${formatAddress(account)}</span></div>
+				<div>Network: <span style="color: #4caf50;">${getChainName(chainId)}</span></div>
+				<div>Chain ID: ${chainId}</div>
+			`;
+
+			// 显示连接器支持的链
+			connectorChains.innerHTML = supportedChains
+				? supportedChains
+						.map((id) => `<span class="chain-badge">${getChainName(id)} (${id})</span>`)
+						.join('')
+				: '<span>All chains supported</span>';
+
+			// 显示 DApp 配置的链
+			const dappChainsList = [mainnet, polygon, base];
+			dappChains.innerHTML = dappChainsList
+				.map((chain) => `<span class="chain-badge">${chain.name} (${chain.id})</span>`)
+				.join('');
+
+			// 显示信息区域和其他按钮
+			coinbaseInfo.style.display = 'block';
+			element.style.display = 'none';
+			disconnectBtn.style.display = 'inline-block';
+			switchChainBtn.style.display = 'inline-block';
+			switchAccountBtn.style.display = 'inline-block';
+		}
+	};
+	element.addEventListener('click', () => void handle());
+}
+
+export function setupCoinbaseDisconnect(element: HTMLButtonElement) {
+	const coinbaseInfo = document.querySelector('#coinbase-info') as HTMLDivElement;
+	const connectBtn = document.querySelector('#coinbase-connect') as HTMLButtonElement;
+	const switchChainBtn = document.querySelector('#coinbase-switchchain') as HTMLButtonElement;
+	const switchAccountBtn = document.querySelector('#coinbase-switchaccount') as HTMLButtonElement;
+
+	const handle = async () => {
+		console.log('Coinbase disconnect button clicked');
+		const result = await coinbaseConnector.disconnect();
+		console.log({ result });
+
+		// 隐藏信息区域，显示连接按钮
+		coinbaseInfo.style.display = 'none';
+		connectBtn.style.display = 'inline-block';
+		element.style.display = 'none';
+		switchChainBtn.style.display = 'none';
+		switchAccountBtn.style.display = 'none';
+	};
+	element.addEventListener('click', () => void handle());
+}
+
+export function setupCoinbaseSwitchChain(element: HTMLButtonElement) {
+	const connectionInfo = document.querySelector('#coinbase-connection-info') as HTMLDivElement;
+
+	const handle = async () => {
+		console.log('Coinbase switch chain button clicked');
+		const result = await coinbaseConnector.switchChain(56); // Switch to BSC
+		const newChainId = await coinbaseConnector.getChainId();
+		const account = await coinbaseConnector.getAccount();
+
+		console.log({ result, newChainId });
+
+		// 更新连接信息显示
+		connectionInfo.innerHTML = `
+			<div>Address: <span style="color: #646cff; font-family: monospace;">${formatAddress(account)}</span></div>
+			<div>Network: <span style="color: #4caf50;">${getChainName(newChainId)}</span></div>
+			<div>Chain ID: ${newChainId}</div>
+		`;
+	};
+	element.addEventListener('click', () => void handle());
+}
+
+export function setupCoinbaseSwitchAccount(element: HTMLButtonElement) {
+	const connectionInfo = document.querySelector('#coinbase-connection-info') as HTMLDivElement;
+
+	const handle = async () => {
+		console.log('Coinbase switch account button clicked');
+		const accounts = await coinbaseConnector.getAccounts();
+		if (accounts.length > 1) {
+			const result = await coinbaseConnector.switchAccount(accounts[1]);
+			const chainId = await coinbaseConnector.getChainId();
+
+			console.log({ result });
+
+			// 更新连接信息显示
+			connectionInfo.innerHTML = `
+				<div>Address: <span style="color: #646cff; font-family: monospace;">${formatAddress(accounts[1])}</span></div>
+				<div>Network: <span style="color: #4caf50;">${getChainName(chainId)}</span></div>
+				<div>Chain ID: ${chainId}</div>
+			`;
+		} else {
+			alert('Only one account available. Please add more accounts in your wallet.');
+		}
+	};
+	element.addEventListener('click', () => void handle());
+}
+
+// ==================== EIP-6963 Wallets Functions ====================
 
 // 更新钱包列表 UI
 function updateWalletsList(wallets: EIP6963ProviderDetail[]) {
@@ -392,6 +537,33 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
       <p>Detecting wallets...</p>
     </div>
 
+    <!-- Coinbase Smart Wallet 连接器 -->
+    <div class="card legacy-connector">
+      <h3>Coinbase Smart Wallet</h3>
+
+      <div id="coinbase-info" style="display: none;" class="connector-info">
+        <div class="info-section">
+          <strong>Connection Info:</strong>
+          <div id="coinbase-connection-info"></div>
+        </div>
+        <div class="info-section">
+          <strong>Supported Chains (Connector):</strong>
+          <div id="coinbase-connector-chains"></div>
+        </div>
+        <div class="info-section">
+          <strong>Supported Chains (DApp):</strong>
+          <div id="coinbase-dapp-chains"></div>
+        </div>
+      </div>
+
+      <div class="button-group">
+        <button id="coinbase-connect" type="button">Connect</button>
+        <button id="coinbase-disconnect" type="button" style="display: none;">Disconnect</button>
+        <button id="coinbase-switchchain" type="button" style="display: none;">Switch Chain (BSC)</button>
+        <button id="coinbase-switchaccount" type="button" style="display: none;">Switch Account</button>
+      </div>
+    </div>
+
     <!-- 传统 Injected 连接器测试 -->
     <div class="card legacy-connector">
       <h3>Legacy Injected Connector</h3>
@@ -414,20 +586,26 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
       <div class="button-group">
         <button id="injected" type="button">Connect</button>
         <button id="disconnect" type="button" style="display: none;">Disconnect</button>
-        <button id="switchchain" type="button" style="display: none;">Switch Chain</button>
+        <button id="switchchain" type="button" style="display: none;">Switch Chain (BSC)</button>
         <button id="switchaccount" type="button" style="display: none;">Switch Account</button>
       </div>
     </div>
 
     <p class="read-the-docs">
-      EIP-6963 enables automatic wallet discovery
+      Test Coinbase Smart Wallet and EIP-6963 wallet discovery
     </p>
   </div>
 `;
 
+// Setup Coinbase Smart Wallet Connector
+setupCoinbase(document.querySelector<HTMLButtonElement>('#coinbase-connect')!);
+setupCoinbaseDisconnect(document.querySelector<HTMLButtonElement>('#coinbase-disconnect')!);
+setupCoinbaseSwitchChain(document.querySelector<HTMLButtonElement>('#coinbase-switchchain')!);
+setupCoinbaseSwitchAccount(document.querySelector<HTMLButtonElement>('#coinbase-switchaccount')!);
+
+// Setup Legacy Injected Connector
 setupInjected(document.querySelector<HTMLButtonElement>('#injected')!);
 setupDisconect(document.querySelector<HTMLButtonElement>('#disconnect')!);
-
 switchchain(document.querySelector<HTMLButtonElement>('#switchchain')!);
 switchaccount(document.querySelector<HTMLButtonElement>('#switchaccount')!);
 
@@ -439,7 +617,7 @@ watchEIP6963Wallets((wallets: EIP6963ProviderDetail[]) => {
 	wallets.forEach((wallet) => {
 		if (!eip6963Connectors.has(wallet.info.rdns)) {
 			const walletConnector = new EIP6963Connector({
-				chains: [mainnet, polygon],
+				chains: [mainnet, polygon, bsc],
 				shimDisconnect: true,
 				providerDetail: wallet
 			});

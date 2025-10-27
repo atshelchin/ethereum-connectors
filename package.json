@@ -41,6 +41,7 @@
 		"vitest": "^4.0.3"
 	},
 	"dependencies": {
+		"@base-org/account": "^2.4.0",
 		"viem": "^2.38.4"
 	}
 }
