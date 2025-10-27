@@ -296,9 +296,6 @@ export function initManagerExample() {
 		// 更新连接器列表 UI
 		updateConnectorsList();
 
-		// 标记 EIP-6963 发现完成
-		eip6963Ready = true;
-
 		// 如果还没尝试自动连接，现在尝试
 		if (!autoConnectAttempted) {
 			attemptAutoConnect();
