@@ -14,7 +14,9 @@ A comprehensive TypeScript library for connecting to Ethereum wallets with suppo
 ### 🎯 Key Capabilities
 
 - ✅ **Multi-wallet Support** - Connect to multiple wallets simultaneously
+- ✅ **Dynamic Chain Updates** - Update supported chains at runtime without reconnection
 - ✅ **Chain Switching** - Seamlessly switch between different blockchain networks
+- ✅ **Network Management** - Complete network configuration with localStorage persistence
 - ✅ **Account Management** - Handle multiple accounts per wallet
 - ✅ **Event System** - Real-time connection, disconnection, and permission change events
 - ✅ **TypeScript First** - Full type safety with TypeScript support
@@ -241,6 +243,41 @@ connector.getMetadata(): { id, name, icon }
 
 // Get supported chains
 connector.getSupportedChains(): number[] | null
+
+// Update supported chains (optional, for WalletConnect/Coinbase)
+await connector.updateChains?(chains: Chain[]): Promise<void>
+```
+
+### Dynamic Chain Updates
+
+Connectors support dynamic chain updates at runtime:
+
+```typescript
+import { IntegratedManager } from '@shelchin/ethereum-connectors';
+
+// Create integrated manager
+const manager = new IntegratedManager(
+	[injectedConnector, walletConnectConnector, coinbaseConnector],
+	builtInNetworks,
+	'my-dapp'
+);
+
+// Get managers
+const networkManager = manager.getNetworkManager();
+const walletManager = manager.getWalletManager();
+
+// Enable/disable networks - connectors automatically update
+networkManager.toggleNetwork('my-dapp', 137, true); // Enable Polygon
+
+// Only the currently connected connector will reinitialize
+// Disconnected connectors will use updated chains on next connection
+```
+
+**How it works:**
+- When networks are enabled/disabled, all connectors' internal chain lists are updated
+- Only the currently connected connector calls `updateChains()` (reinitializes if needed)
+- Prevents unwanted side effects like QR code popups for disconnected WalletConnect
+- Ensures smooth experience when switching between connectors
 ```
 
 ## 📚 Supported Chains
@@ -382,7 +419,8 @@ Complete network management system with wallet integration:
 - Enable/disable networks per DApp
 - Integrated wallet connection
 - Real-time supported networks display
-- Persistent network configuration
+- Persistent network configuration with localStorage
+- Dynamic chain updates (connectors update automatically)
 
 ## 🤝 Contributing
 
