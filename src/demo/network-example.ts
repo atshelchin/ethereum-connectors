@@ -15,11 +15,11 @@ import QRCodeStyling from 'qr-code-styling';
  * 展示如何使用 IntegratedManager 来管理网络和钱包连接
  */
 
-// 支持的链列表
-const supportedChains = [mainnet, polygon, base, bsc, arbitrum, optimism];
+// 默认支持的链列表（仅在 localStorage 为空时使用）
+const defaultChains = [mainnet, polygon, base, bsc, arbitrum, optimism];
 
 // 转换为 NetworkConfig
-const builtInNetworks: NetworkConfig[] = supportedChains.map((chain) => ({
+const builtInNetworks: NetworkConfig[] = defaultChains.map((chain) => ({
 	chainId: chain.id,
 	name: chain.name,
 	symbol: chain.nativeCurrency.symbol,
@@ -36,21 +36,74 @@ const builtInNetworks: NetworkConfig[] = supportedChains.map((chain) => ({
 	createdAt: new Date().toISOString()
 }));
 
-// 创建连接器
+// 先创建一个临时的 NetworkManager 来检查 localStorage
+import { NetworkManager } from '../core/manager/network-manager';
+const tempNetworkManager = new NetworkManager(builtInNetworks);
+
+// 获取 localStorage 中保存的启用网络列表
+const enabledNetworks = tempNetworkManager.getEnabledNetworks('demo-app');
+
+// 如果 localStorage 为空，使用默认链列表初始化
+if (enabledNetworks.length === 0) {
+	console.log('[NetworkExample] No enabled networks in localStorage, initializing with defaults');
+	tempNetworkManager.initializeNamespace(
+		'demo-app',
+		defaultChains.map((chain) => chain.id)
+	);
+}
+
+// 获取最终的启用网络列表（从 localStorage 或默认值）
+const finalEnabledNetworks = tempNetworkManager.getEnabledNetworks('demo-app');
+
+// 将 NetworkConfig 转换为 viem Chain
+const initialChains = finalEnabledNetworks.map((network) => ({
+	id: network.chainId,
+	name: network.name,
+	nativeCurrency: {
+		name: network.symbol,
+		symbol: network.symbol,
+		decimals: 18
+	},
+	rpcUrls: {
+		default: {
+			http: network.rpcEndpoints
+				.filter((rpc) => rpc.isPrimary || rpc.isAvailable !== false)
+				.map((rpc) => rpc.url)
+		},
+		public: {
+			http: network.rpcEndpoints.map((rpc) => rpc.url)
+		}
+	},
+	blockExplorers: network.blockExplorer
+		? {
+				default: {
+					name: 'Explorer',
+					url: network.blockExplorer
+				}
+			}
+		: undefined
+}));
+
+console.log(
+	'[NetworkExample] Initializing connectors with chains:',
+	initialChains.map((c) => `${c.name}(${c.id})`).join(', ')
+);
+
+// 创建连接器（使用从 localStorage 加载的链列表）
 const injectedConnector = new InjectedConnector({
-	chains: supportedChains,
+	chains: initialChains,
 	shimDisconnect: true
 });
 
 const coinbaseConnector = new CoinbaseSmartWalletConnector({
-	chains: supportedChains,
+	chains: initialChains,
 	shimDisconnect: true,
 	appName: 'Network Manager Demo',
 	appLogoUrl: 'https://example.com/logo.png'
 });
 
 const walletConnectConnector = new WalletConnectConnector({
-	chains: supportedChains,
+	chains: initialChains,
 	shimDisconnect: true,
 	projectId: 'e3928bd840eee588e157816acb2c8ad8',
 	metadata: {
@@ -61,7 +114,7 @@ const walletConnectConnector = new WalletConnectConnector({
 	}
 });
 
-// 创建集成管理器
+// 创建集成管理器（会复用 localStorage 中的配置）
 export const integratedManager = new IntegratedManager(
 	[injectedConnector, coinbaseConnector, walletConnectConnector],
 	builtInNetworks,
@@ -207,10 +260,14 @@ export function updateAllNetworksList(): void {
 			const network = networkManager.getNetwork(chainId);
 
 			if (network && confirm(`Delete network "${network.name}"?`)) {
-				networkManager.removeCustomNetwork(chainId);
-				updateAllNetworksList();
-				updateEnabledNetworksList();
-				updateSupportedNetworksDisplay();
+				try {
+					networkManager.removeCustomNetwork(chainId);
+					updateAllNetworksList();
+					updateEnabledNetworksList();
+					updateSupportedNetworksDisplay();
+				} catch (error) {
+					alert(error instanceof Error ? error.message : 'Failed to delete network');
+				}
 			}
 		});
 	});
@@ -724,8 +781,38 @@ export function initNetworkExample(): void {
 				return;
 			}
 
+			// 使用当前启用的网络列表来创建 EIP-6963 连接器
+			const enabledNetworks = networkManager.getEnabledNetworks('demo-app');
+			const chains = enabledNetworks.map((network) => ({
+				id: network.chainId,
+				name: network.name,
+				nativeCurrency: {
+					name: network.symbol,
+					symbol: network.symbol,
+					decimals: 18
+				},
+				rpcUrls: {
+					default: {
+						http: network.rpcEndpoints
+							.filter((rpc) => rpc.isPrimary || rpc.isAvailable !== false)
+							.map((rpc) => rpc.url)
+					},
+					public: {
+						http: network.rpcEndpoints.map((rpc) => rpc.url)
+					}
+				},
+				blockExplorers: network.blockExplorer
+					? {
+							default: {
+								name: 'Explorer',
+								url: network.blockExplorer
+							}
+						}
+					: undefined
+			}));
+
 			const connector = new EIP6963Connector({
-				chains: supportedChains,
+				chains,
 				shimDisconnect: true,
 				providerDetail: wallet
 			});

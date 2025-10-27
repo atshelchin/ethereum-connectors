@@ -54,13 +54,20 @@ export class WalletConnectConnector extends BaseConnector {
 
 		// 获取支持的链 ID
 		const chainIds = this.chains.map((chain) => chain.id);
-		const defaultChainId = chainIds[0] || 1;
+
+		if (chainIds.length === 0) {
+			throw new Error('At least one chain is required for WalletConnect');
+		}
+		console.log({ chainIds });
 
 		// 创建 EthereumProvider
+		// chains: 必需支持的链（所有启用的链）
+		// optionalChains: 可选支持的链（为了兼容性，也包含所有链）
+		// TypeScript 要求 optionalChains 至少有一个元素，所以用 as 断言
 		this.provider = await EthereumProvider.init({
 			projectId: this.wcOptions.projectId,
-			chains: [defaultChainId],
-			optionalChains: chainIds,
+			chains: chainIds,
+			optionalChains: chainIds as [number, ...number[]],
 			showQrModal: false,
 			qrModalOptions: this.wcOptions.qrModalOptions,
 			metadata: this.wcOptions.metadata || {
@@ -475,5 +482,54 @@ export class WalletConnectConnector extends BaseConnector {
 			throw new Error('Provider not initialized. Please call connect() first.');
 		}
 		return this.provider;
+	}
+
+	/**
+	 * 更新支持的链列表
+	 * WalletConnect 需要重新初始化才能更新链
+	 */
+	async updateChains(chains: unknown[]): Promise<void> {
+		const wasConnected = this.provider?.connected || false;
+		let currentChainId: number | undefined;
+
+		// 保存当前状态
+		if (wasConnected && this.provider) {
+			try {
+				currentChainId = this.provider.chainId;
+			} catch (error) {
+				console.warn('[WalletConnect] Failed to get current state:', error);
+			}
+		}
+
+		// 更新内部 chains
+		this.chains = chains as typeof this.chains;
+
+		// 如果已连接，需要断开并重新连接
+		if (wasConnected && this.provider) {
+			console.log('[WalletConnect] Disconnecting to update chains...');
+			await this.provider.disconnect();
+			this.provider = null;
+
+			// 重新初始化
+			console.log('[WalletConnect] Reinitializing with new chains...');
+			await this.initializeProvider();
+
+			// 如果有保存的链 ID，尝试重新连接到该链
+			if (currentChainId && this.getChain(currentChainId)) {
+				try {
+					console.log('[WalletConnect] Reconnecting to chain:', currentChainId);
+					await this.connect(currentChainId);
+				} catch (error) {
+					console.warn('[WalletConnect] Failed to reconnect:', error);
+					this.emit('error', new Error('Failed to reconnect after updating chains'));
+				}
+			}
+		} else {
+			// 如果未连接，只重置 provider 以便下次连接使用新的链列表
+			if (this.provider) {
+				await this.provider.disconnect();
+			}
+			this.provider = null;
+		}
 	}
 }

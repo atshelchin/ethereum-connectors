@@ -146,30 +146,32 @@ export class NetworkManager {
 
 	/**
 	 * 删除自定义网络
+	 *
+	 * 限制：网络必须在所有命名空间中都被禁用后才能删除
 	 */
 	removeCustomNetwork(chainId: number): void {
 		const network = this.config.networks[chainId];
 		if (!network?.isCustom) {
 			console.warn('[NetworkManager] Cannot remove built-in network');
-			return;
+			throw new Error('Cannot remove built-in network');
 		}
 
-		// 从所有命名空间中移除，并自动切换当前网络
-		Object.keys(this.config.namespaces).forEach((ns) => {
-			const namespace = this.config.namespaces[ns];
-			const idx = namespace.enabledChainIds.indexOf(chainId);
-
-			if (idx > -1) {
-				namespace.enabledChainIds.splice(idx, 1);
-
-				// 如果删除的是当前网络，切换到第一个启用的网络
-				if (namespace.currentChainId === chainId) {
-					namespace.currentChainId =
-						namespace.enabledChainIds.length > 0 ? namespace.enabledChainIds[0] : undefined;
-				}
-			}
+		// 检查网络是否在任何命名空间中启用
+		const enabledInNamespaces = Object.keys(this.config.namespaces).filter((ns) => {
+			return this.config.namespaces[ns].enabledChainIds.includes(chainId);
 		});
 
+		if (enabledInNamespaces.length > 0) {
+			const namespaceList = enabledInNamespaces.join(', ');
+			console.warn(
+				`[NetworkManager] Cannot remove network ${chainId}: still enabled in namespaces: ${namespaceList}`
+			);
+			throw new Error(
+				`Network must be disabled in all namespaces before deletion. Currently enabled in: ${namespaceList}`
+			);
+		}
+
+		// 删除网络
 		delete this.config.networks[chainId];
 		this.save();
 		this.emit('networkRemoved', chainId);

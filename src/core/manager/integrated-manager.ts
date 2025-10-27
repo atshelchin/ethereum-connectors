@@ -162,9 +162,25 @@ export class IntegratedManager {
 	/**
 	 * 监听 WalletManager 事件
 	 */
+	private previousConnectorId: string | undefined = undefined;
+
 	private setupWalletManagerListeners(): void {
-		// 监听钱包网络切换，同步到 NetworkManager
+		// 监听钱包状态变化
 		this.walletManager.subscribe((state) => {
+			// 检测连接器切换（仅用于日志）
+			const currentConnectorId = state.connector?.id;
+			if (
+				state.isConnected &&
+				currentConnectorId &&
+				currentConnectorId !== this.previousConnectorId
+			) {
+				console.log('[IntegratedManager] Connector switched to:', state.connector?.name);
+				this.previousConnectorId = currentConnectorId;
+				// 注意：不在这里调用 updateChains()，因为所有连接器的内部 chains
+				// 已经在 updateWalletManagerChains() 中更新过了
+			}
+
+			// 监听钱包网络切换，同步到 NetworkManager
 			if (state.isConnected && state.chainId) {
 				const currentNetworkId = this.networkManager.getCurrentChainId(this.namespace);
 
@@ -186,18 +202,25 @@ export class IntegratedManager {
 					}
 				}
 			}
+
+			// 更新断开连接状态
+			if (!state.isConnected) {
+				this.previousConnectorId = undefined;
+			}
 		});
 	}
 
 	/**
 	 * 更新 WalletManager 的网络列表
 	 *
-	 * 注意：目前我们的连接器架构不支持动态更新链列表
-	 * - EIP-6963/Injected: 支持所有链，不需要配置
-	 * - WalletConnect/Coinbase: 构造时传入 chains，但主要用于初始化
+	 * 策略：
+	 * 1. 更新所有连接器的内部 chains 属性（通过直接赋值）
+	 * 2. 只对当前已连接的连接器调用 updateChains()（触发重新初始化）
 	 *
-	 * 未来可以添加 connector.updateChains() 方法来支持动态更新
-	 * 目前的解决方案：让 NetworkManager 管理启用的网络，WalletManager 在切换时验证
+	 * 这样可以确保：
+	 * - 未连接的连接器在下次连接时使用最新的链列表
+	 * - 已连接的连接器（如 WalletConnect）会重新初始化
+	 * - 避免触发未连接连接器的 QR 码弹出等行为
 	 */
 	private updateWalletManagerChains(): void {
 		const enabledNetworks = this.networkManager.getEnabledNetworks(this.namespace);
@@ -206,12 +229,33 @@ export class IntegratedManager {
 			enabledNetworks.map((n) => `${n.name}(${n.chainId})`).join(', ')
 		);
 
-		// 未来如果连接器支持动态更新链列表，在这里调用
-		// this.walletManager.getConnectors().forEach((connector) => {
-		//   if (typeof connector.updateChains === 'function') {
-		//     connector.updateChains(chains);
-		//   }
-		// });
+		// 转换为 viem Chain 格式
+		const chains = this.networkConfigsToChains(enabledNetworks);
+
+		// 获取当前连接的连接器
+		const state = this.walletManager.getState();
+		const currentConnector = state.connector;
+
+		// 更新所有连接器的内部 chains（通过访问 protected 属性）
+		this.walletManager.getConnectors().forEach((connector) => {
+			// TypeScript 类型断言：BaseConnector 有 protected chains 属性
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+			(connector as any).chains = chains;
+			console.log(`[IntegratedManager] Updated internal chains for: ${connector.name}`);
+		});
+
+		// 只对当前已连接的连接器调用 updateChains()（触发重新初始化）
+		if (currentConnector && typeof currentConnector.updateChains === 'function') {
+			console.log(
+				`[IntegratedManager] Calling updateChains() for active connector: ${currentConnector.name}`
+			);
+			void currentConnector.updateChains(chains).catch((error) => {
+				console.error(
+					`[IntegratedManager] Failed to updateChains for ${currentConnector.name}:`,
+					error
+				);
+			});
+		}
 	}
 
 	/**

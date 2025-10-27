@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite';
+import { resolve } from 'path';
 
 export default defineConfig({
 	base: '/ethereum-connectors/', // Update this to match your GitHub repo name
@@ -6,6 +7,11 @@ export default defineConfig({
 		outDir: 'build', // GitHub Pages can serve from docs folder
 		emptyOutDir: true,
 		rollupOptions: {
+			input: {
+				main: resolve(__dirname, 'index.html'),
+				'manager-demo': resolve(__dirname, 'manager-demo.html'),
+				'network-demo': resolve(__dirname, 'network-demo.html')
+			},
 			output: {
 				manualChunks: {
 					'vendor-viem': ['viem'],

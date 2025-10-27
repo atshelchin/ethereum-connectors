@@ -61,10 +61,16 @@ export class CoinbaseSmartWalletConnector extends BaseConnector {
 		if (this.provider) return;
 
 		try {
+			// 获取支持的链 ID（DApp 启用的链与连接器支持的链的交集）
+			const appChainIds = this.chains
+				.map((chain) => chain.id)
+				.filter((chainId) => CoinbaseSmartWalletConnector.SUPPORTED_CHAINS.includes(chainId));
+
 			// 初始化 Base Account SDK
 			this.sdk = createBaseAccountSDK({
 				appName: this.coinbaseOptions.appName || 'ConnectKit',
-				appLogoUrl: this.coinbaseOptions.appLogoUrl
+				appLogoUrl: this.coinbaseOptions.appLogoUrl,
+				appChainIds: appChainIds.length > 0 ? appChainIds : [8453] // 默认使用 Base 主网
 			});
 
 			// 获取 provider
@@ -436,6 +442,59 @@ export class CoinbaseSmartWalletConnector extends BaseConnector {
 			...super.getMetadata(),
 			sdkVersion: 'base-account-sdk'
 		};
+	}
+
+	/**
+	 * 更新支持的链列表
+	 * Coinbase Smart Wallet 需要重新初始化才能更新 appChainIds
+	 */
+	async updateChains(chains: unknown[]): Promise<void> {
+		const wasConnected = !!this.provider;
+		let currentChainId: number | undefined;
+
+		// 保存当前状态
+		if (wasConnected && this.provider) {
+			try {
+				currentChainId = await this.getChainId();
+			} catch (error) {
+				console.warn('[CoinbaseSmartWallet] Failed to get current chainId:', error);
+			}
+		}
+
+		// 更新内部 chains
+		this.chains = chains as typeof this.chains;
+
+		// 如果已连接，需要重新初始化
+		if (wasConnected && this.provider) {
+			console.log('[CoinbaseSmartWallet] Disconnecting to update chains...');
+
+			// 重置 SDK 和 provider
+			this.sdk = null;
+			this.provider = null;
+
+			// 重新初始化
+			console.log('[CoinbaseSmartWallet] Reinitializing with new chains...');
+			this.initializeSDK();
+
+			// 如果有保存的链ID，尝试重新连接到该链
+			if (currentChainId && this.getChain(currentChainId)) {
+				try {
+					console.log('[CoinbaseSmartWallet] Reconnecting to chain:', currentChainId);
+					await this.connect(currentChainId);
+				} catch (error) {
+					console.warn('[CoinbaseSmartWallet] Failed to reconnect:', error);
+					this.emit('error', new Error('Failed to reconnect after updating chains'));
+				}
+			}
+		} else {
+			// 如果未连接，只重置 SDK 以便下次连接使用新的链列表
+			if (this.sdk) {
+				this.sdk = null;
+			}
+			if (this.provider) {
+				this.provider = null;
+			}
+		}
 	}
 }
 

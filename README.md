@@ -354,15 +354,35 @@ pnpm test
 
 ## 🌐 Live Demo
 
-Check out the live demo at: [https://shelchin.github.io/ethereum-connectors/](https://shelchin.github.io/ethereum-connectors/)
+Check out the live demos at: [https://shelchin.github.io/ethereum-connectors/](https://shelchin.github.io/ethereum-connectors/)
 
-The demo showcases:
+### 🔗 Connection Manager Demo
 
+[View Demo →](https://shelchin.github.io/ethereum-connectors/manager-demo.html)
+
+Demonstrates the recommended way to manage wallet connections:
+
+- Single connection enforcement
+- Auto-reconnect on page refresh
 - EIP-6963 automatic wallet discovery
-- WalletConnect QR code connections
-- Coinbase Smart Wallet integration
-- Traditional injected wallet support
-- Chain switching and account management
+- WalletConnect with QR code display
+- Multi-account switching
+- Network switching
+- Persistent connection storage
+
+### 🌐 Network Manager Demo
+
+[View Demo →](https://shelchin.github.io/ethereum-connectors/network-demo.html)
+
+Complete network management system with wallet integration:
+
+- Add/edit/delete custom networks
+- Multiple RPC endpoints per network
+- Primary RPC selection
+- Enable/disable networks per DApp
+- Integrated wallet connection
+- Real-time supported networks display
+- Persistent network configuration
 
 ## 🤝 Contributing
 

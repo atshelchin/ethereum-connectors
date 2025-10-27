@@ -2,12 +2,235 @@
 <html lang="en">
 	<head>
 		<meta charset="UTF-8" />
-		<link rel="icon" type="image/svg+xml" href="/vite.svg" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>ethereum-connectors</title>
+		<title>Ethereum Connectors - Demo</title>
+		<style>
+			:root {
+				--primary-color: #007bff;
+				--primary-hover: #0056b3;
+				--bg-color: #f8f9fa;
+				--card-bg: #ffffff;
+				--text-color: #212529;
+				--text-muted: #6c757d;
+				--border-color: #dee2e6;
+				--shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+				--radius: 8px;
+			}
+
+			* {
+				margin: 0;
+				padding: 0;
+				box-sizing: border-box;
+			}
+
+			body {
+				font-family:
+					-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell',
+					'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+				background: var(--bg-color);
+				color: var(--text-color);
+				line-height: 1.6;
+			}
+
+			.container {
+				max-width: 1200px;
+				margin: 0 auto;
+				padding: 2rem;
+			}
+
+			.hero {
+				text-align: center;
+				padding: 3rem 0;
+			}
+
+			.hero h1 {
+				font-size: 2.5rem;
+				font-weight: 700;
+				margin-bottom: 1rem;
+				color: var(--text-color);
+			}
+
+			.hero p {
+				font-size: 1.25rem;
+				color: var(--text-muted);
+				max-width: 600px;
+				margin: 0 auto;
+			}
+
+			.demos {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+				gap: 2rem;
+				margin-top: 3rem;
+			}
+
+			.demo-card {
+				background: var(--card-bg);
+				border-radius: var(--radius);
+				box-shadow: var(--shadow);
+				padding: 2rem;
+				transition:
+					transform 0.2s,
+					box-shadow 0.2s;
+			}
+
+			.demo-card:hover {
+				transform: translateY(-4px);
+				box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+			}
+
+			.demo-card h2 {
+				font-size: 1.5rem;
+				font-weight: 600;
+				margin-bottom: 1rem;
+				color: var(--text-color);
+			}
+
+			.demo-card p {
+				color: var(--text-muted);
+				margin-bottom: 1.5rem;
+			}
+
+			.demo-card ul {
+				list-style: none;
+				margin-bottom: 1.5rem;
+			}
+
+			.demo-card ul li {
+				padding: 0.5rem 0;
+				color: var(--text-muted);
+				position: relative;
+				padding-left: 1.5rem;
+			}
+
+			.demo-card ul li:before {
+				content: '✓';
+				position: absolute;
+				left: 0;
+				color: var(--primary-color);
+				font-weight: bold;
+			}
+
+			.btn {
+				display: inline-block;
+				padding: 0.75rem 1.5rem;
+				background: var(--primary-color);
+				color: white;
+				text-decoration: none;
+				border-radius: var(--radius);
+				font-weight: 500;
+				transition: background 0.2s;
+				border: none;
+				cursor: pointer;
+				width: 100%;
+				text-align: center;
+			}
+
+			.btn:hover {
+				background: var(--primary-hover);
+			}
+
+			.info {
+				margin-top: 4rem;
+				padding: 2rem;
+				background: var(--card-bg);
+				border-radius: var(--radius);
+				box-shadow: var(--shadow);
+			}
+
+			.info h3 {
+				font-size: 1.5rem;
+				margin-bottom: 1rem;
+			}
+
+			.info p {
+				color: var(--text-muted);
+				margin-bottom: 1rem;
+			}
+
+			.info a {
+				color: var(--primary-color);
+				text-decoration: none;
+			}
+
+			.info a:hover {
+				text-decoration: underline;
+			}
+
+			@media (max-width: 768px) {
+				.hero h1 {
+					font-size: 2rem;
+				}
+
+				.hero p {
+					font-size: 1rem;
+				}
+
+				.demos {
+					grid-template-columns: 1fr;
+				}
+			}
+		</style>
 	</head>
 	<body>
-		<div id="app"></div>
-		<script type="module" src="/src/main.ts"></script>
+		<div class="container">
+			<div class="hero">
+				<h1>Ethereum Connectors</h1>
+				<p>
+					A modern, type-safe library for managing Ethereum wallet connections and network
+					configurations
+				</p>
+			</div>
+
+			<div class="demos">
+				<div class="demo-card">
+					<h2>Connection Manager Demo</h2>
+					<p>
+						Demonstrates centralized wallet connection management with single-connection enforcement
+						and auto-reconnect.
+					</p>
+					<ul>
+						<li>EIP-6963 wallet discovery</li>
+						<li>WalletConnect with QR code</li>
+						<li>Single connection enforcement</li>
+						<li>Auto-reconnect on page refresh</li>
+						<li>Multi-account switching</li>
+						<li>Network switching</li>
+					</ul>
+					<a href="./manager-demo.html" class="btn">Launch Demo</a>
+				</div>
+
+				<div class="demo-card">
+					<h2>Network Manager Demo</h2>
+					<p>
+						Complete network management with custom networks, multi-RPC support, and wallet
+						integration.
+					</p>
+					<ul>
+						<li>Add/edit custom networks</li>
+						<li>Multiple RPC endpoints per network</li>
+						<li>Enable/disable networks</li>
+						<li>Integrated wallet connection</li>
+						<li>Supported networks display</li>
+						<li>Persistent configuration</li>
+					</ul>
+					<a href="./network-demo.html" class="btn">Launch Demo</a>
+				</div>
+			</div>
+
+			<div class="info">
+				<h3>About</h3>
+				<p>
+					This library provides framework-agnostic tools for managing Ethereum wallet connections
+					and network configurations. It includes support for EIP-6963, WalletConnect, and custom
+					network management.
+				</p>
+				<p>
+					<a href="https://github.com/shelchin/ethereum-connectors" target="_blank">
+						View on GitHub →
+					</a>
+				</p>
+			</div>
+		</div>
 	</body>
 </html>

@@ -244,6 +244,23 @@ export interface Connector {
 	 * ```
 	 */
 	getSupportedChains(): number[] | null;
+
+	/**
+	 * 更新连接器支持的链列表（可选）
+	 *
+	 * 动态更新连接器支持的链。对于某些连接器（如 WalletConnect），
+	 * 这可能需要重新初始化连接。
+	 *
+	 * @param chains 新的链列表（from viem/chains）
+	 * @returns Promise，resolve 表示更新成功
+	 *
+	 * @example
+	 * ```typescript
+	 * // 更新支持的链
+	 * await connector.updateChains([mainnet, polygon, base]);
+	 * ```
+	 */
+	updateChains?(chains: unknown[]): Promise<void>;
 }
 
 /**
