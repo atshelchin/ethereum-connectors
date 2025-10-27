@@ -174,7 +174,7 @@ const state = manager.getState();
 - ✅ **Event System** - Subscribe to connection state changes
 - ✅ **Type Safe** - Full TypeScript support
 
-[See live demo →](https://shelchin.github.io/ethereum-connectors/manager-demo.html)
+[See live demo →](https://atshelchin.github.io/ethereum-connectors/manager-demo.html)
 
 ## 🎨 Event System
 
@@ -393,11 +393,11 @@ pnpm test
 
 ## 🌐 Live Demo
 
-Check out the live demos at: [https://shelchin.github.io/ethereum-connectors/](https://shelchin.github.io/ethereum-connectors/)
+Check out the live demos at: [https://atshelchin.github.io/ethereum-connectors/](https://atshelchin.github.io/ethereum-connectors/)
 
 ### 🔗 Connection Manager Demo
 
-[View Demo →](https://shelchin.github.io/ethereum-connectors/manager-demo.html)
+[View Demo →](https://atshelchin.github.io/ethereum-connectors/manager-demo.html)
 
 Demonstrates the recommended way to manage wallet connections:
 
@@ -411,7 +411,7 @@ Demonstrates the recommended way to manage wallet connections:
 
 ### 🌐 Network Manager Demo
 
-[View Demo →](https://shelchin.github.io/ethereum-connectors/network-demo.html)
+[View Demo →](https://atshelchin.github.io/ethereum-connectors/network-demo.html)
 
 Complete network management system with wallet integration:
 
