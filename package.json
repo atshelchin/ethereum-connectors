@@ -21,8 +21,11 @@
 		"dist"
 	],
 	"scripts": {
-		"dev": "vite build --watch",
+		"dev": "vite",
+		"dev:lib": "vite build --watch",
 		"build": "tsc && vite build",
+		"build:demo": "vite build --config vite.demo.config.ts",
+		"preview": "vite preview",
 		"prepublishOnly": "npm run build",
 		"format": "prettier --write .",
 		"lint": "prettier --check . && eslint .",
@@ -42,6 +45,7 @@
 	},
 	"dependencies": {
 		"@base-org/account": "^2.4.0",
+		"@walletconnect/ethereum-provider": "^2.22.4",
 		"viem": "^2.38.4"
 	}
 }
