@@ -3,7 +3,7 @@ import { defineConfig } from 'vite';
 export default defineConfig({
 	base: '/ethereum-connectors/', // Update this to match your GitHub repo name
 	build: {
-		outDir: 'docs', // GitHub Pages can serve from docs folder
+		outDir: 'build', // GitHub Pages can serve from docs folder
 		emptyOutDir: true,
 		rollupOptions: {
 			output: {
@@ -13,9 +13,18 @@ export default defineConfig({
 					'vendor-base': ['@base-org/account']
 				}
 			}
+		},
+		commonjsOptions: {
+			include: [/node_modules/],
+			transformMixedEsModules: true
 		}
 	},
 	optimizeDeps: {
-		exclude: []
+		exclude: [],
+		esbuildOptions: {
+			define: {
+				global: 'globalThis'
+			}
+		}
 	}
 });
