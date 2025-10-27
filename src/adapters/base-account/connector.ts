@@ -106,8 +106,6 @@ export class CoinbaseSmartWalletConnector extends BaseConnector {
 			if (!this.provider) {
 				throw new Error('Failed to initialize provider');
 			}
-			console.log('coinbase connect ');
-
 			// 请求账户访问权限
 			const accounts = (await this.provider.request({
 				method: 'eth_requestAccounts'
@@ -476,7 +474,7 @@ export class CoinbaseSmartWalletConnector extends BaseConnector {
 			console.log('[CoinbaseSmartWallet] Reinitializing with new chains...');
 			this.initializeSDK();
 
-			// 如果有保存的链ID，尝试重新连接到该链
+			// 如果有保存的链 ID，尝试重新连接到该链
 			if (currentChainId && this.getChain(currentChainId)) {
 				try {
 					console.log('[CoinbaseSmartWallet] Reconnecting to chain:', currentChainId);
