@@ -5,7 +5,8 @@ import {
 	hideAddNetworkModal,
 	saveNetwork,
 	disconnectWallet,
-	switchToFirstNetwork
+	switchToFirstNetwork,
+	addRpcEndpoint
 } from './demo/network-example';
 
 // 初始化示例
@@ -61,5 +62,29 @@ const switchBtn = document.querySelector('#switch-to-first-network-btn') as HTML
 if (switchBtn) {
 	switchBtn.addEventListener('click', () => {
 		switchToFirstNetwork();
+	});
+}
+
+// 添加 RPC 按钮
+const addRpcBtn = document.querySelector('#add-rpc-btn') as HTMLButtonElement;
+if (addRpcBtn) {
+	addRpcBtn.addEventListener('click', () => {
+		addRpcEndpoint();
+	});
+}
+
+// QR Code 关闭按钮
+const qrCloseBtn = document.querySelector('#qr-close') as HTMLButtonElement;
+const qrModal = document.querySelector('#qr-modal') as HTMLDivElement;
+if (qrCloseBtn && qrModal) {
+	qrCloseBtn.addEventListener('click', () => {
+		qrModal.style.display = 'none';
+	});
+
+	// 点击背景关闭
+	qrModal.addEventListener('click', (e) => {
+		if (e.target === qrModal) {
+			qrModal.style.display = 'none';
+		}
 	});
 }

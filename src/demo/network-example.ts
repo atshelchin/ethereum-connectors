@@ -7,6 +7,7 @@ import { EIP6963Connector } from '../adapters/eip6963/connector';
 import { watchEIP6963Wallets } from '../adapters/eip6963/discovery';
 import type { NetworkConfig, RpcEndpoint } from '../core/types/network';
 import type { EIP6963ProviderDetail } from '../adapters/eip6963/types';
+import QRCodeStyling from 'qr-code-styling';
 
 /**
  * Network Manager 示例
@@ -71,6 +72,75 @@ export const integratedManager = new IntegratedManager(
 const networkManager = integratedManager.getNetworkManager();
 const walletManager = integratedManager.getWalletManager();
 
+// QR Code 实例
+let qrCode: QRCodeStyling | null = null;
+
+/**
+ * 显示 QR Code
+ */
+function showQRCode(uri: string): void {
+	const modal = document.querySelector('#qr-modal') as HTMLDivElement;
+	const qrContainer = document.querySelector('#qr-code') as HTMLDivElement;
+
+	if (!modal || !qrContainer) return;
+
+	qrContainer.innerHTML = '';
+
+	qrCode = new QRCodeStyling({
+		width: 300,
+		height: 300,
+		data: uri,
+		margin: 10,
+		qrOptions: {
+			typeNumber: 0,
+			mode: 'Byte',
+			errorCorrectionLevel: 'Q'
+		},
+		dotsOptions: {
+			type: 'rounded',
+			color: '#000000'
+		},
+		backgroundOptions: {
+			color: '#ffffff'
+		}
+	});
+
+	qrCode.append(qrContainer);
+	modal.style.display = 'flex';
+}
+
+/**
+ * 隐藏 QR Code
+ */
+function hideQRCode(): void {
+	const modal = document.querySelector('#qr-modal') as HTMLDivElement;
+	if (modal) {
+		modal.style.display = 'none';
+	}
+}
+
+/**
+ * 更新支持的网络显示
+ */
+export function updateSupportedNetworksDisplay(): void {
+	const container = document.querySelector('#supported-networks-display') as HTMLDivElement;
+	if (!container) return;
+
+	const enabledNetworks = networkManager.getEnabledNetworks('demo-app');
+
+	if (enabledNetworks.length === 0) {
+		container.innerHTML = '<span style="color: var(--text-secondary);">No networks enabled</span>';
+		return;
+	}
+
+	container.innerHTML = enabledNetworks
+		.map(
+			(network) =>
+				`<span style="display: inline-block; margin: 0.25rem; padding: 0.25rem 0.5rem; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.813rem;">${network.name}</span>`
+		)
+		.join('');
+}
+
 /**
  * 更新所有网络列表 UI
  */
@@ -126,6 +196,7 @@ export function updateAllNetworksList(): void {
 			if (success) {
 				updateAllNetworksList();
 				updateEnabledNetworksList();
+				updateSupportedNetworksDisplay();
 			}
 		});
 	});
@@ -139,6 +210,7 @@ export function updateAllNetworksList(): void {
 				networkManager.removeCustomNetwork(chainId);
 				updateAllNetworksList();
 				updateEnabledNetworksList();
+				updateSupportedNetworksDisplay();
 			}
 		});
 	});
@@ -318,6 +390,98 @@ export function updateConnectorsList(): void {
 	});
 }
 
+// 存储当前编辑的 RPC 端点列表
+let currentRpcEndpoints: RpcEndpoint[] = [];
+
+/**
+ * 渲染 RPC 端点列表
+ */
+function renderRpcEndpoints(): void {
+	const container = document.querySelector('#rpc-endpoints-list') as HTMLDivElement;
+	if (!container) return;
+
+	if (currentRpcEndpoints.length === 0) {
+		container.innerHTML = '<p style="color: var(--text-secondary); font-size: 0.875rem;">No RPC endpoints added yet</p>';
+		return;
+	}
+
+	container.innerHTML = currentRpcEndpoints
+		.map((rpc, index) => `
+			<div style="display: flex; gap: 0.5rem; align-items: center;">
+				<input type="text" class="form-input" value="${rpc.url}"
+					data-rpc-index="${index}"
+					placeholder="https://..."
+					style="flex: 1;" />
+				<button type="button" class="set-primary-rpc-btn small ${rpc.isPrimary ? '' : 'secondary'}"
+					data-rpc-index="${index}"
+					${rpc.isPrimary ? 'disabled' : ''}>
+					${rpc.isPrimary ? '✓ Primary' : 'Set Primary'}
+				</button>
+				<button type="button" class="remove-rpc-btn small danger"
+					data-rpc-index="${index}"
+					${currentRpcEndpoints.length === 1 ? 'disabled' : ''}>
+					×
+				</button>
+			</div>
+		`)
+		.join('');
+
+	// 绑定事件
+	container.querySelectorAll('input[data-rpc-index]').forEach((input) => {
+		input.addEventListener('input', (e) => {
+			const index = parseInt((e.target as HTMLInputElement).dataset.rpcIndex || '0');
+			currentRpcEndpoints[index].url = (e.target as HTMLInputElement).value;
+		});
+	});
+
+	container.querySelectorAll('.set-primary-rpc-btn').forEach((btn) => {
+		btn.addEventListener('click', () => {
+			const index = parseInt((btn as HTMLButtonElement).dataset.rpcIndex || '0');
+			// 取消所有primary
+			currentRpcEndpoints.forEach((rpc) => {
+				rpc.isPrimary = false;
+			});
+			// 设置当前为primary
+			currentRpcEndpoints[index].isPrimary = true;
+			renderRpcEndpoints();
+		});
+	});
+
+	container.querySelectorAll('.remove-rpc-btn').forEach((btn) => {
+		btn.addEventListener('click', () => {
+			const index = parseInt((btn as HTMLButtonElement).dataset.rpcIndex || '0');
+			const wasPrimary = currentRpcEndpoints[index].isPrimary;
+			currentRpcEndpoints.splice(index, 1);
+			// 如果删除的是主RPC，设置第一个为主RPC
+			if (wasPrimary && currentRpcEndpoints.length > 0) {
+				currentRpcEndpoints[0].isPrimary = true;
+			}
+			renderRpcEndpoints();
+		});
+	});
+}
+
+/**
+ * 添加新的 RPC 端点
+ */
+export function addRpcEndpoint(): void {
+	currentRpcEndpoints.push({
+		url: '',
+		isPrimary: currentRpcEndpoints.length === 0, // 第一个自动为主RPC
+		isAvailable: true
+	});
+	renderRpcEndpoints();
+
+	// 聚焦到新添加的输入框
+	setTimeout(() => {
+		const inputs = document.querySelectorAll('#rpc-endpoints-list input[data-rpc-index]');
+		const lastInput = inputs[inputs.length - 1] as HTMLInputElement;
+		if (lastInput) {
+			lastInput.focus();
+		}
+	}, 0);
+}
+
 /**
  * 显示添加网络弹窗
  */
@@ -328,8 +492,17 @@ export function showAddNetworkModal(): void {
 		(document.querySelector('#network-name') as HTMLInputElement).value = '';
 		(document.querySelector('#network-chain-id') as HTMLInputElement).value = '';
 		(document.querySelector('#network-symbol') as HTMLInputElement).value = '';
-		(document.querySelector('#network-rpc') as HTMLInputElement).value = '';
 		(document.querySelector('#network-explorer') as HTMLInputElement).value = '';
+
+		// 重置 RPC 列表（添加一个空的）
+		currentRpcEndpoints = [
+			{
+				url: '',
+				isPrimary: true,
+				isAvailable: true
+			}
+		];
+		renderRpcEndpoints();
 
 		modal.style.display = 'flex';
 	}
@@ -357,10 +530,12 @@ function showEditNetworkModal(network: NetworkConfig): void {
 			network.chainId.toString();
 		(document.querySelector('#network-chain-id') as HTMLInputElement).disabled = true; // 不允许修改 chainId
 		(document.querySelector('#network-symbol') as HTMLInputElement).value = network.symbol;
-		(document.querySelector('#network-rpc') as HTMLInputElement).value =
-			network.rpcEndpoints[0]?.url || '';
 		(document.querySelector('#network-explorer') as HTMLInputElement).value =
 			network.blockExplorer || '';
+
+		// 加载现有的 RPC 端点
+		currentRpcEndpoints = network.rpcEndpoints.map((rpc) => ({ ...rpc }));
+		renderRpcEndpoints();
 
 		modal.style.display = 'flex';
 	}
@@ -373,13 +548,24 @@ export function saveNetwork(): void {
 	const name = (document.querySelector('#network-name') as HTMLInputElement).value.trim();
 	const chainIdStr = (document.querySelector('#network-chain-id') as HTMLInputElement).value.trim();
 	const symbol = (document.querySelector('#network-symbol') as HTMLInputElement).value.trim();
-	const rpcUrl = (document.querySelector('#network-rpc') as HTMLInputElement).value.trim();
 	const explorer = (document.querySelector('#network-explorer') as HTMLInputElement).value.trim();
 
 	// 验证
-	if (!name || !chainIdStr || !symbol || !rpcUrl) {
+	if (!name || !chainIdStr || !symbol) {
 		alert('Please fill in all required fields');
 		return;
+	}
+
+	// 验证 RPC 端点
+	const validRpcs = currentRpcEndpoints.filter((rpc) => rpc.url.trim() !== '');
+	if (validRpcs.length === 0) {
+		alert('Please add at least one RPC endpoint');
+		return;
+	}
+
+	// 确保有一个 primary RPC
+	if (!validRpcs.some((rpc) => rpc.isPrimary)) {
+		validRpcs[0].isPrimary = true;
 	}
 
 	const chainId = parseInt(chainIdStr);
@@ -392,27 +578,19 @@ export function saveNetwork(): void {
 	const existing = networkManager.getNetwork(chainId);
 	const isEdit = !!existing;
 
-	// 创建 RPC 端点
-	const rpcEndpoints: RpcEndpoint[] = [
-		{
-			url: rpcUrl,
-			isPrimary: true,
-			isAvailable: true
-		}
-	];
-
 	// 添加或更新网络
 	networkManager.addOrUpdateCustomNetwork({
 		chainId,
 		name,
 		symbol,
-		rpcEndpoints,
+		rpcEndpoints: validRpcs,
 		blockExplorer: explorer || undefined
 	});
 
 	// 更新 UI
 	updateAllNetworksList();
 	updateEnabledNetworksList();
+	updateSupportedNetworksDisplay();
 	hideAddNetworkModal();
 
 	// 重新启用 chainId 输入框（下次使用）
@@ -462,12 +640,23 @@ export function switchToFirstNetwork(): void {
 export function initNetworkExample(): void {
 	console.log('[NetworkExample] Initializing...');
 
+	// 监听 WalletConnect 的 display_uri 事件
+	walletConnectConnector.on('display_uri', (uri) => {
+		console.log('[NetworkExample] WalletConnect URI:', uri);
+		showQRCode(uri);
+	});
+
 	// 订阅钱包状态变化
 	walletManager.subscribe((state) => {
 		console.log('[NetworkExample] Wallet state updated:', state);
 		updateWalletStatus();
 		updateAllNetworksList();
 		updateEnabledNetworksList();
+
+		// 连接成功后隐藏二维码
+		if (state.isConnected) {
+			hideQRCode();
+		}
 	});
 
 	// 监听 NetworkManager 事件
@@ -492,12 +681,14 @@ export function initNetworkExample(): void {
 		console.log('[NetworkExample] Network toggled:', chainId, enabled);
 		updateAllNetworksList();
 		updateEnabledNetworksList();
+		updateSupportedNetworksDisplay();
 	});
 
 	networkManager.on('currentNetworkChanged', (_namespace, chainId) => {
 		console.log('[NetworkExample] Current network changed:', chainId);
 		updateAllNetworksList();
 		updateEnabledNetworksList();
+		updateSupportedNetworksDisplay();
 	});
 
 	// 启动 EIP-6963 钱包发现
@@ -526,6 +717,7 @@ export function initNetworkExample(): void {
 	// 初始化 UI
 	updateAllNetworksList();
 	updateEnabledNetworksList();
+	updateSupportedNetworksDisplay();
 	updateWalletStatus();
 	updateConnectorsList();
 

@@ -172,12 +172,13 @@
 				cursor: pointer;
 				transition: all 0.15s ease;
 				background: var(--accent);
-				color: #ffffff;
+
 			}
 
 			button:hover:not(:disabled) {
 				background: var(--accent-hover);
 				transform: translateY(-1px);
+								color: #ffffff;
 			}
 
 			button:disabled {
@@ -319,6 +320,13 @@
 			<div class="section" style="margin-bottom: 2rem;">
 				<h2 class="section-title">Wallet Connection</h2>
 
+				<div class="info-box">
+					<strong>Supported Networks:</strong>
+					<div id="supported-networks-display" style="margin-top: 0.5rem; font-size: 0.875rem;">
+						Loading...
+					</div>
+				</div>
+
 				<div class="status-grid">
 					<div class="status-label">Status</div>
 					<div id="wallet-status" class="status-value">Disconnected</div>
@@ -331,14 +339,14 @@
 				</div>
 
 				<div class="button-group">
-					<button id="connect-wallet-btn">Connect Wallet</button>
 					<button id="disconnect-wallet-btn" disabled>Disconnect</button>
 					<button id="switch-to-first-network-btn" class="secondary" disabled>
 						Switch to First Network
 					</button>
 				</div>
 
-				<div id="available-connectors-list" class="network-list" style="margin-top: 1.5rem;">
+				<h3 style="font-size: 1.25rem; font-weight: 600; margin-top: 2rem; margin-bottom: 1rem;">Available Wallets</h3>
+				<div id="available-connectors-list" class="network-list">
 					<!-- Connectors will be listed here -->
 				</div>
 			</div>
@@ -408,8 +416,11 @@
 				</div>
 
 				<div class="form-group">
-					<label class="form-label">RPC URL</label>
-					<input type="text" id="network-rpc" class="form-input" placeholder="https://..." />
+					<label class="form-label">RPC Endpoints</label>
+					<div id="rpc-endpoints-list" style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.5rem;">
+						<!-- RPC endpoints will be added here -->
+					</div>
+					<button type="button" id="add-rpc-btn" class="secondary small" style="width: 100%;">+ Add RPC</button>
 				</div>
 
 				<div class="form-group">
@@ -421,6 +432,15 @@
 					<button id="save-network-btn">Save Network</button>
 					<button id="cancel-add-network-btn" class="secondary">Cancel</button>
 				</div>
+			</div>
+		</div>
+
+		<!-- QR Code Modal for WalletConnect -->
+		<div id="qr-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center;">
+			<div style="background: var(--bg-card); padding: 2rem; border-radius: 12px; text-align: center; border: 1px solid var(--border-color);">
+				<h3 style="margin-bottom: 1rem;">Scan with WalletConnect</h3>
+				<div id="qr-code" style="background: white; padding: 1rem; border-radius: 8px; margin: 1rem 0; display: inline-block;"></div>
+				<button id="qr-close" class="secondary" style="width: 100%;">Close</button>
 			</div>
 		</div>
 
