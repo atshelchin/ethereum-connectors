@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<link rel="icon" type="image/svg+xml" href="/vite.svg" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Connection Manager - Ethereum Connectors</title>
+		<style>
+			* {
+				margin: 0;
+				padding: 0;
+				box-sizing: border-box;
+			}
+
+			:root {
+				--bg-primary: #ffffff;
+				--bg-secondary: #f8f9fa;
+				--bg-card: #ffffff;
+				--border-color: #e5e7eb;
+				--text-primary: #1f2937;
+				--text-secondary: #6b7280;
+				--accent: #3b82f6;
+				--accent-hover: #2563eb;
+				--success: #10b981;
+				--danger: #ef4444;
+				--danger-hover: #dc2626;
+			}
+
+			@media (prefers-color-scheme: dark) {
+				:root {
+					--bg-primary: #0f172a;
+					--bg-secondary: #1e293b;
+					--bg-card: #1e293b;
+					--border-color: #334155;
+					--text-primary: #f1f5f9;
+					--text-secondary: #94a3b8;
+				}
+			}
+
+			body {
+				font-family:
+					-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+				background: var(--bg-primary);
+				color: var(--text-primary);
+				line-height: 1.6;
+			}
+
+			.container {
+				max-width: 1200px;
+				margin: 0 auto;
+				padding: 3rem 1.5rem;
+			}
+
+			.header {
+				text-align: center;
+				margin-bottom: 3rem;
+			}
+
+			h1 {
+				font-size: 2.5rem;
+				font-weight: 700;
+				margin-bottom: 0.5rem;
+				color: var(--text-primary);
+			}
+
+			.subtitle {
+				font-size: 1.125rem;
+				color: var(--text-secondary);
+				font-weight: 400;
+			}
+
+			.section {
+				background: var(--bg-card);
+				border: 1px solid var(--border-color);
+				border-radius: 12px;
+				padding: 2rem;
+				margin-bottom: 2rem;
+			}
+
+			.section-title {
+				font-size: 1.5rem;
+				font-weight: 600;
+				margin-bottom: 1.5rem;
+				color: var(--text-primary);
+			}
+
+			.status-grid {
+				display: grid;
+				grid-template-columns: 140px 1fr;
+				gap: 1rem;
+				margin-bottom: 1.5rem;
+			}
+
+			.status-label {
+				font-weight: 500;
+				color: var(--text-secondary);
+			}
+
+			.status-value {
+				color: var(--text-primary);
+				font-family: ui-monospace, monospace;
+			}
+
+			.status-value .switch-account-btn {
+				padding: 0.25rem 0.75rem;
+				font-size: 0.813rem;
+				min-width: auto;
+			}
+
+			.status-badge {
+				display: inline-flex;
+				align-items: center;
+				gap: 0.5rem;
+				padding: 0.25rem 0.75rem;
+				border-radius: 6px;
+				font-size: 0.875rem;
+				font-weight: 500;
+			}
+
+			.status-badge.connected {
+				background: rgba(16, 185, 129, 0.1);
+				color: var(--success);
+			}
+
+			.status-badge.disconnected {
+				background: var(--bg-secondary);
+				color: var(--text-secondary);
+			}
+
+			.status-badge.connecting {
+				background: rgba(59, 130, 246, 0.1);
+				color: var(--accent);
+			}
+
+			.button-group {
+				display: flex;
+				gap: 0.75rem;
+				flex-wrap: wrap;
+			}
+
+			button {
+				padding: 0.625rem 1.25rem;
+				border: none;
+				border-radius: 8px;
+				font-size: 0.938rem;
+				font-weight: 500;
+				cursor: pointer;
+				transition: all 0.15s ease;
+				background: var(--accent);
+				/* color: #ffffff; */
+			}
+
+			button:hover:not(:disabled) {
+				background: var(--accent-hover);
+				transform: translateY(-1px);
+				color: #ffffff;
+			}
+
+			button:active:not(:disabled) {
+				transform: translateY(0);
+			}
+
+			button:disabled {
+				background: var(--bg-secondary);
+				color: var(--text-secondary);
+				cursor: not-allowed;
+				transform: none;
+				opacity: 0.6;
+			}
+
+			button.danger {
+				background: var(--danger);
+				color: #ffffff;
+			}
+
+			button.danger:hover:not(:disabled) {
+				background: var(--danger-hover);
+			}
+
+			button.secondary {
+				background: var(--bg-secondary);
+				color: var(--text-primary);
+				border: 1px solid var(--border-color);
+			}
+
+			button.secondary:hover:not(:disabled) {
+				background: var(--bg-primary);
+				border-color: var(--accent);
+			}
+
+			.connector-list {
+				display: grid;
+				gap: 1rem;
+			}
+
+			.connector-item {
+				display: grid;
+				grid-template-columns: auto 1fr auto auto;
+				gap: 1rem;
+				align-items: center;
+				padding: 1.25rem;
+				background: var(--bg-secondary);
+				border: 1px solid var(--border-color);
+				border-radius: 8px;
+				transition: border-color 0.15s ease;
+			}
+
+			.connector-item.active {
+				border-color: var(--success);
+				background: rgba(16, 185, 129, 0.05);
+			}
+
+			.connector-icon {
+				width: 40px;
+				height: 40px;
+				border-radius: 8px;
+			}
+
+			.connector-info {
+				display: flex;
+				flex-direction: column;
+				gap: 0.25rem;
+			}
+
+			.connector-info strong {
+				font-weight: 600;
+				font-size: 1rem;
+			}
+
+			.connector-info small {
+				font-size: 0.813rem;
+				color: var(--text-secondary);
+				font-family: ui-monospace, monospace;
+			}
+
+			.connector-status {
+				font-size: 0.875rem;
+				min-width: 80px;
+				text-align: right;
+			}
+
+			.connector-connect-btn {
+				min-width: 100px;
+			}
+
+			.qr-modal {
+				display: none;
+				position: fixed;
+				top: 0;
+				left: 0;
+				right: 0;
+				bottom: 0;
+				background: rgba(0, 0, 0, 0.7);
+				z-index: 1000;
+				align-items: center;
+				justify-content: center;
+			}
+
+			.qr-modal.show {
+				display: flex;
+			}
+
+			.qr-content {
+				background: var(--bg-card);
+				border: 1px solid var(--border-color);
+				border-radius: 16px;
+				padding: 2rem;
+				max-width: 400px;
+				text-align: center;
+				box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+			}
+
+			.qr-content h3 {
+				margin-bottom: 1rem;
+				color: var(--text-primary);
+			}
+
+			.qr-code {
+				background: white;
+				padding: 1rem;
+				border-radius: 8px;
+				margin: 1rem 0;
+				display: inline-block;
+			}
+
+			.qr-code canvas {
+				display: block;
+			}
+
+			.qr-close {
+				margin-top: 1rem;
+				width: 100%;
+			}
+
+			.feature-grid {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+				gap: 1rem;
+				margin-top: 1.5rem;
+			}
+
+			.feature-card {
+				padding: 1.25rem;
+				background: var(--bg-secondary);
+				border-radius: 8px;
+				border: 1px solid var(--border-color);
+			}
+
+			.feature-title {
+				font-weight: 600;
+				margin-bottom: 0.5rem;
+				color: var(--text-primary);
+			}
+
+			.feature-desc {
+				font-size: 0.938rem;
+				color: var(--text-secondary);
+			}
+
+			.info-box {
+				padding: 1.25rem;
+				background: rgba(59, 130, 246, 0.05);
+				border: 1px solid rgba(59, 130, 246, 0.2);
+				border-radius: 8px;
+				margin-top: 1.5rem;
+			}
+
+			.info-box p {
+				margin-bottom: 0.75rem;
+				color: var(--text-primary);
+			}
+
+			.info-box p:last-child {
+				margin-bottom: 0;
+			}
+
+			code {
+				background: var(--bg-secondary);
+				padding: 0.125rem 0.375rem;
+				border-radius: 4px;
+				font-family: ui-monospace, monospace;
+				font-size: 0.875em;
+			}
+
+			@media (max-width: 768px) {
+				.container {
+					padding: 2rem 1rem;
+				}
+
+				h1 {
+					font-size: 2rem;
+				}
+
+				.status-grid {
+					grid-template-columns: 1fr;
+					gap: 0.5rem;
+				}
+
+				.connector-item {
+					grid-template-columns: auto 1fr;
+					gap: 0.75rem;
+				}
+
+				.connector-status,
+				.connector-connect-btn {
+					grid-column: 1 / -1;
+				}
+
+				.feature-grid {
+					grid-template-columns: 1fr;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+			<div class="header">
+				<h1>Connection Manager</h1>
+				<p class="subtitle">Unified wallet management with auto-reconnect</p>
+			</div>
+
+			<!-- Connection Status -->
+			<div class="section">
+				<h2 class="section-title">Connection Status</h2>
+
+				<div class="status-grid">
+					<div class="status-label">Status</div>
+					<div id="manager-status" class="status-value">
+						<span class="status-badge disconnected">Disconnected</span>
+					</div>
+
+					<div class="status-label">Wallet</div>
+					<div id="manager-connector" class="status-value">-</div>
+
+					<div class="status-label">Address</div>
+					<div id="manager-address" class="status-value">-</div>
+
+					<div class="status-label">Network</div>
+					<div id="manager-chain" class="status-value">-</div>
+
+					<div class="status-label">Accounts</div>
+					<div id="manager-accounts" class="status-value">-</div>
+				</div>
+
+				<div class="button-group">
+					<button id="manager-disconnect" class="danger" disabled>Disconnect</button>
+					<button id="manager-switch-chain-polygon" class="manager-switch-chain secondary" disabled>
+						→ Polygon
+					</button>
+					<button id="manager-switch-chain-base" class="manager-switch-chain secondary" disabled>
+						→ Base
+					</button>
+					<button id="manager-switch-account" class="secondary" disabled>Request Accounts</button>
+				</div>
+			</div>
+
+			<!-- Available Wallets -->
+			<div class="section">
+				<h2 class="section-title">Available Wallets</h2>
+				<p style="color: var(--text-secondary); margin-bottom: 1.5rem">
+					Click to connect. Only one wallet can be active at a time.
+				</p>
+				<div id="manager-connectors-list" class="connector-list">
+					<p style="color: var(--text-secondary)">Loading...</p>
+				</div>
+			</div>
+
+			<!-- Features -->
+			<div class="section">
+				<h2 class="section-title">Key Features</h2>
+
+				<div class="feature-grid">
+					<div class="feature-card">
+						<div class="feature-title">🔒 Single Connection</div>
+						<div class="feature-desc">
+							Only one wallet connected at a time, automatically managed
+						</div>
+					</div>
+
+					<div class="feature-card">
+						<div class="feature-title">🔄 Auto Reconnect</div>
+						<div class="feature-desc">Restores connection on page refresh (24h validity)</div>
+					</div>
+
+					<div class="feature-card">
+						<div class="feature-title">💾 Persistent Storage</div>
+						<div class="feature-desc">Connection saved to localStorage automatically</div>
+					</div>
+
+					<div class="feature-card">
+						<div class="feature-title">📡 Unified State</div>
+						<div class="feature-desc">Single source of truth for all wallet connections</div>
+					</div>
+				</div>
+
+				<div class="info-box">
+					<p><strong>Test Auto-Reconnect:</strong></p>
+					<p>1. Connect to any wallet above</p>
+					<p>2. Refresh the page</p>
+					<p>3. The connection will be automatically restored</p>
+				</div>
+
+				<div class="button-group" style="margin-top: 1.5rem">
+					<button id="manager-clear-storage" class="danger">Clear Saved Connection</button>
+				</div>
+			</div>
+		</div>
+
+		<!-- QR Code Modal -->
+		<div id="qr-modal" class="qr-modal">
+			<div class="qr-content">
+				<h3>Scan with WalletConnect</h3>
+				<div id="qr-code" class="qr-code"></div>
+				<button id="qr-close" class="qr-close secondary">Close</button>
+			</div>
+		</div>
+
+		<script type="module" src="/src/manager-demo-main.ts"></script>
+	</body>
+</html>

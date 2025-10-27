@@ -276,6 +276,15 @@ export class WalletConnectionManager implements ConnectionManager {
 			console.log('[Manager] Attempting to switch chain via connector...');
 			await this.state.connector.switchChain(chainId);
 			console.log('[Manager] Chain switch successful to chainId:', chainId);
+
+			// Update state with new chainId
+			this.updateState({
+				...this.state,
+				chainId
+			});
+
+			// Persist the new chain
+			this.persistConnection();
 		} catch (error: unknown) {
 			console.log('[Manager] Chain switch failed with error:', error);
 

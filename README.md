@@ -43,20 +43,20 @@ import { mainnet, polygon } from 'viem/chains';
 
 // Discover all available wallets
 watchEIP6963Wallets((wallets) => {
-  console.log('Discovered wallets:', wallets);
+	console.log('Discovered wallets:', wallets);
 
-  wallets.forEach((wallet) => {
-    const connector = new EIP6963Connector({
-      chains: [mainnet, polygon],
-      shimDisconnect: true,
-      providerDetail: wallet
-    });
+	wallets.forEach((wallet) => {
+		const connector = new EIP6963Connector({
+			chains: [mainnet, polygon],
+			shimDisconnect: true,
+			providerDetail: wallet
+		});
 
-    // Connect to wallet
-    connector.connect(1).then((result) => {
-      console.log('Connected:', result);
-    });
-  });
+		// Connect to wallet
+		connector.connect(1).then((result) => {
+			console.log('Connected:', result);
+		});
+	});
 });
 ```
 
@@ -67,21 +67,21 @@ import { WalletConnectConnector } from '@shelchin/ethereum-connectors';
 import { mainnet, polygon, base } from 'viem/chains';
 
 const connector = new WalletConnectConnector({
-  chains: [mainnet, polygon, base],
-  shimDisconnect: true,
-  projectId: 'YOUR_WALLETCONNECT_PROJECT_ID',
-  metadata: {
-    name: 'My DApp',
-    description: 'My awesome DApp',
-    url: 'https://my-dapp.com',
-    icons: ['https://my-dapp.com/icon.png']
-  }
+	chains: [mainnet, polygon, base],
+	shimDisconnect: true,
+	projectId: 'YOUR_WALLETCONNECT_PROJECT_ID',
+	metadata: {
+		name: 'My DApp',
+		description: 'My awesome DApp',
+		url: 'https://my-dapp.com',
+		icons: ['https://my-dapp.com/icon.png']
+	}
 });
 
 // Listen for QR code URI
 connector.on('display_uri', (uri) => {
-  console.log('Scan this QR code:', uri);
-  // Display QR code to user
+	console.log('Scan this QR code:', uri);
+	// Display QR code to user
 });
 
 // Connect
@@ -95,10 +95,10 @@ import { CoinbaseSmartWalletConnector } from '@shelchin/ethereum-connectors';
 import { mainnet, base } from 'viem/chains';
 
 const connector = new CoinbaseSmartWalletConnector({
-  chains: [mainnet, base],
-  shimDisconnect: true,
-  appName: 'My DApp',
-  appLogoUrl: 'https://my-dapp.com/logo.png'
+	chains: [mainnet, base],
+	shimDisconnect: true,
+	appName: 'My DApp',
+	appLogoUrl: 'https://my-dapp.com/logo.png'
 });
 
 // Connect to Base chain by default
@@ -112,14 +112,67 @@ import { InjectedConnector } from '@shelchin/ethereum-connectors';
 import { mainnet, polygon } from 'viem/chains';
 
 const connector = new InjectedConnector({
-  chains: [mainnet, polygon],
-  shimDisconnect: true
+	chains: [mainnet, polygon],
+	shimDisconnect: true
 });
 
 if (connector.ready) {
-  await connector.connect(1);
+	await connector.connect(1);
 }
 ```
+
+## 🔗 Connection Manager (Recommended)
+
+For production use, we recommend using `WalletConnectionManager` to manage multiple connectors with enhanced features:
+
+```typescript
+import { WalletConnectionManager } from '@shelchin/ethereum-connectors';
+import { mainnet, polygon, base } from 'viem/chains';
+
+// Create manager with all your connectors
+const manager = new WalletConnectionManager(
+	[injectedConnector, walletConnectConnector, coinbaseConnector],
+	[mainnet, polygon, base]
+);
+
+// Subscribe to connection state changes
+manager.subscribe((state) => {
+	console.log('Connection state:', state);
+	// { isConnected, isConnecting, address, chainId, connector, error }
+});
+
+// Auto-reconnect on page load
+await manager.autoConnect();
+
+// Connect to a wallet (automatically disconnects any existing connection)
+await manager.connect(connector, chainId);
+
+// Switch network
+await manager.switchChain(137); // Polygon
+
+// Switch account
+await manager.switchAccount(address);
+
+// Disconnect
+await manager.disconnect();
+
+// Get all registered connectors
+const connectors = manager.getConnectors();
+
+// Get current state
+const state = manager.getState();
+```
+
+### Connection Manager Features
+
+- ✅ **Single Connection** - Enforces only one active connection at a time
+- ✅ **Auto Reconnect** - Automatically reconnects on page refresh (24-hour validity)
+- ✅ **Persistent Storage** - Saves connection info to localStorage
+- ✅ **Unified State** - Single source of truth for all connectors
+- ✅ **Event System** - Subscribe to connection state changes
+- ✅ **Type Safe** - Full TypeScript support
+
+[See live demo →](https://shelchin.github.io/ethereum-connectors/manager-demo.html)
 
 ## 🎨 Event System
 
@@ -128,24 +181,24 @@ All connectors support a consistent event system:
 ```typescript
 // Connection established
 connector.on('connected', (info) => {
-  console.log('Connected:', info);
-  // { address, addresses, chainId, chains }
+	console.log('Connected:', info);
+	// { address, addresses, chainId, chains }
 });
 
 // Disconnected
 connector.on('disconnected', () => {
-  console.log('Disconnected');
+	console.log('Disconnected');
 });
 
 // Chain or account changed
 connector.on('permissionChanged', (info) => {
-  console.log('Permission changed:', info);
-  // { address, addresses, chainId, chains }
+	console.log('Permission changed:', info);
+	// { address, addresses, chainId, chains }
 });
 
 // Error occurred
 connector.on('error', (error) => {
-  console.error('Error:', error);
+	console.error('Error:', error);
 });
 ```
 
@@ -231,7 +284,7 @@ Switch between different blockchain networks seamlessly:
 
 ```typescript
 const connector = new EIP6963Connector({
-  chains: [mainnet, polygon, arbitrum, optimism]
+	chains: [mainnet, polygon, arbitrum, optimism]
 });
 
 // Connect to Ethereum
@@ -250,9 +303,9 @@ Build once, support all wallets:
 
 ```typescript
 async function connectWallet(connector: BaseConnector) {
-  const result = await connector.connect(1);
-  const balance = await getBalance(connector.getProvider());
-  return { ...result, balance };
+	const result = await connector.connect(1);
+	const balance = await getBalance(connector.getProvider());
+	return { ...result, balance };
 }
 
 // Works with any connector type
@@ -304,6 +357,7 @@ pnpm test
 Check out the live demo at: [https://shelchin.github.io/ethereum-connectors/](https://shelchin.github.io/ethereum-connectors/)
 
 The demo showcases:
+
 - EIP-6963 automatic wallet discovery
 - WalletConnect QR code connections
 - Coinbase Smart Wallet integration
@@ -356,6 +410,7 @@ To use WalletConnect, you need to obtain a project ID from [WalletConnect Cloud]
 ## 🙏 Acknowledgments
 
 Built with:
+
 - [Viem](https://viem.sh/) - TypeScript EVM library
 - [WalletConnect](https://walletconnect.com/) - Wallet connection protocol
 - [Coinbase Base Account SDK](https://github.com/base-org/account) - Smart wallet SDK
