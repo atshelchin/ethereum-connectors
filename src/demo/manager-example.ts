@@ -38,7 +38,7 @@ const coinbaseConnector = new CoinbaseSmartWalletConnector({
 const walletConnectConnector = new WalletConnectConnector({
 	chains: supportedChains,
 	shimDisconnect: true,
-	projectId: 'e3928bd840eee588e157816acb2c8ad8',
+	projectId: 'e68249e217c8793807b7bb961a2f4297',
 	metadata: {
 		name: 'Ethereum Connectors Demo',
 		description: 'Demo for Ethereum wallet connectors',
