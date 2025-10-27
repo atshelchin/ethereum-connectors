@@ -274,11 +274,13 @@ networkManager.toggleNetwork('my-dapp', 137, true); // Enable Polygon
 ```
 
 **How it works:**
+
 - When networks are enabled/disabled, all connectors' internal chain lists are updated
 - Only the currently connected connector calls `updateChains()` (reinitializes if needed)
 - Prevents unwanted side effects like QR code popups for disconnected WalletConnect
 - Ensures smooth experience when switching between connectors
-```
+
+````
 
 ## 📚 Supported Chains
 
@@ -313,7 +315,7 @@ const wcConnector = new WalletConnectConnector({ ... });
 
 // Support Coinbase Smart Wallet
 const cbConnector = new CoinbaseSmartWalletConnector({ ... });
-```
+````
 
 ### Multi-Chain DApp
 
