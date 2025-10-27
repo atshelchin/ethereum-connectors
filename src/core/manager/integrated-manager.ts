@@ -17,11 +17,7 @@ export class IntegratedManager {
 	private walletManager: WalletConnectionManager;
 	private namespace: string;
 
-	constructor(
-		connectors: Connector[],
-		builtInNetworks: NetworkConfig[],
-		namespace = 'default'
-	) {
+	constructor(connectors: Connector[], builtInNetworks: NetworkConfig[], namespace = 'default') {
 		this.namespace = namespace;
 
 		// 创建网络管理器
@@ -75,7 +71,10 @@ export class IntegratedManager {
 
 				if (newCurrentChainId) {
 					// 切换到 NetworkManager 选择的新网络
-					console.log('[IntegratedManager] Switching wallet to new current network:', newCurrentChainId);
+					console.log(
+						'[IntegratedManager] Switching wallet to new current network:',
+						newCurrentChainId
+					);
 					void this.walletManager.switchChain(newCurrentChainId).catch((error) => {
 						console.error('[IntegratedManager] Failed to switch after network removal:', error);
 						// 如果切换失败，断开连接
@@ -171,7 +170,10 @@ export class IntegratedManager {
 
 				// 如果钱包网络与 NetworkManager 不同步，更新 NetworkManager
 				if (currentNetworkId !== state.chainId) {
-					console.log('[IntegratedManager] Wallet network changed, syncing to NetworkManager:', state.chainId);
+					console.log(
+						'[IntegratedManager] Wallet network changed, syncing to NetworkManager:',
+						state.chainId
+					);
 
 					// 检查这个网络是否在启用列表中
 					if (this.networkManager.isNetworkEnabled(this.namespace, state.chainId)) {

@@ -281,6 +281,7 @@ export function updateEnabledNetworksList(): void {
  */
 export function updateWalletStatus(): void {
 	const statusElement = document.querySelector('#wallet-status') as HTMLDivElement;
+	const connectorElement = document.querySelector('#wallet-connector') as HTMLDivElement;
 	const networkElement = document.querySelector('#wallet-network') as HTMLDivElement;
 	const addressElement = document.querySelector('#wallet-address') as HTMLDivElement;
 	const disconnectBtn = document.querySelector('#disconnect-wallet-btn') as HTMLButtonElement;
@@ -291,6 +292,20 @@ export function updateWalletStatus(): void {
 	if (statusElement) {
 		statusElement.textContent = state.isConnected ? 'Connected' : 'Disconnected';
 		statusElement.style.color = state.isConnected ? 'var(--success)' : 'var(--text-secondary)';
+	}
+
+	if (connectorElement) {
+		if (state.isConnected && state.connector) {
+			const metadata = state.connector.getMetadata();
+			connectorElement.innerHTML = `
+				<div style="display: flex; align-items: center; gap: 0.5rem;">
+					${metadata.icon ? `<img src="${metadata.icon}" alt="${metadata.name}" style="width: 20px; height: 20px; border-radius: 4px;" />` : ''}
+					<span>${metadata.name}</span>
+				</div>
+			`;
+		} else {
+			connectorElement.textContent = '-';
+		}
 	}
 
 	if (networkElement) {
@@ -401,12 +416,14 @@ function renderRpcEndpoints(): void {
 	if (!container) return;
 
 	if (currentRpcEndpoints.length === 0) {
-		container.innerHTML = '<p style="color: var(--text-secondary); font-size: 0.875rem;">No RPC endpoints added yet</p>';
+		container.innerHTML =
+			'<p style="color: var(--text-secondary); font-size: 0.875rem;">No RPC endpoints added yet</p>';
 		return;
 	}
 
 	container.innerHTML = currentRpcEndpoints
-		.map((rpc, index) => `
+		.map(
+			(rpc, index) => `
 			<div style="display: flex; gap: 0.5rem; align-items: center;">
 				<input type="text" class="form-input" value="${rpc.url}"
 					data-rpc-index="${index}"
@@ -423,7 +440,8 @@ function renderRpcEndpoints(): void {
 					×
 				</button>
 			</div>
-		`)
+		`
+		)
 		.join('');
 
 	// 绑定事件
@@ -629,7 +647,9 @@ export function switchToFirstNetwork(): void {
 			console.log('[NetworkExample] Switched to:', enabledNetworks[0].name);
 		} catch (error) {
 			console.error('[NetworkExample] Switch failed:', error);
-			alert(`Failed to switch network: ${error instanceof Error ? error.message : 'Unknown error'}`);
+			alert(
+				`Failed to switch network: ${error instanceof Error ? error.message : 'Unknown error'}`
+			);
 		}
 	})();
 }
@@ -691,6 +711,9 @@ export function initNetworkExample(): void {
 		updateSupportedNetworksDisplay();
 	});
 
+	// 标记是否已尝试自动连接
+	let autoConnectAttempted = false;
+
 	// 启动 EIP-6963 钱包发现
 	watchEIP6963Wallets((wallets: EIP6963ProviderDetail[]) => {
 		console.log('[NetworkExample] Discovered EIP-6963 wallets:', wallets);
@@ -712,7 +735,31 @@ export function initNetworkExample(): void {
 		});
 
 		updateConnectorsList();
+
+		// EIP-6963 钱包发现完成后尝试自动连接
+		if (!autoConnectAttempted) {
+			attemptAutoConnect();
+		}
 	});
+
+	// 自动连接函数
+	const attemptAutoConnect = () => {
+		autoConnectAttempted = true;
+		void (async () => {
+			console.log('[NetworkExample] Attempting auto-connect...');
+			const success = await walletManager.autoConnect();
+			console.log('[NetworkExample] Auto-connect result:', success);
+		})();
+	};
+
+	// 给 EIP-6963 一些时间来发现钱包（500ms 超时）
+	// 如果超时还没发现任何钱包，也尝试自动连接（可能使用内置连接器）
+	setTimeout(() => {
+		if (!autoConnectAttempted) {
+			console.log('[NetworkExample] EIP-6963 timeout, attempting auto-connect anyway...');
+			attemptAutoConnect();
+		}
+	}, 500);
 
 	// 初始化 UI
 	updateAllNetworksList();

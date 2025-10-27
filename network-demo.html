@@ -39,8 +39,8 @@
 			}
 
 			body {
-				font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue',
-					Arial, sans-serif;
+				font-family:
+					-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 				background: var(--bg-primary);
 				color: var(--text-primary);
 				line-height: 1.6;
@@ -172,13 +172,12 @@
 				cursor: pointer;
 				transition: all 0.15s ease;
 				background: var(--accent);
-
 			}
 
 			button:hover:not(:disabled) {
 				background: var(--accent-hover);
 				transform: translateY(-1px);
-								color: #ffffff;
+				color: #ffffff;
 			}
 
 			button:disabled {
@@ -294,10 +293,10 @@
 					</div>
 
 					<div id="all-networks-list" class="network-list">
-						<p style="color: var(--text-secondary);">Loading...</p>
+						<p style="color: var(--text-secondary)">Loading...</p>
 					</div>
 
-					<div style="margin-top: 1.5rem;">
+					<div style="margin-top: 1.5rem">
 						<button id="add-network-btn">+ Add Custom Network</button>
 					</div>
 				</div>
@@ -307,22 +306,23 @@
 					<h2 class="section-title">Enabled Networks</h2>
 
 					<div class="info-box">
-						<strong>DApp Networks:</strong> Only enabled networks are available for wallet connections
+						<strong>DApp Networks:</strong> Only enabled networks are available for wallet
+						connections
 					</div>
 
 					<div id="enabled-networks-list" class="network-list">
-						<p style="color: var(--text-secondary);">Loading...</p>
+						<p style="color: var(--text-secondary)">Loading...</p>
 					</div>
 				</div>
 			</div>
 
 			<!-- Wallet Connection -->
-			<div class="section" style="margin-bottom: 2rem;">
+			<div class="section" style="margin-bottom: 2rem">
 				<h2 class="section-title">Wallet Connection</h2>
 
 				<div class="info-box">
 					<strong>Supported Networks:</strong>
-					<div id="supported-networks-display" style="margin-top: 0.5rem; font-size: 0.875rem;">
+					<div id="supported-networks-display" style="margin-top: 0.5rem; font-size: 0.875rem">
 						Loading...
 					</div>
 				</div>
@@ -330,6 +330,9 @@
 				<div class="status-grid">
 					<div class="status-label">Status</div>
 					<div id="wallet-status" class="status-value">Disconnected</div>
+
+					<div class="status-label">Connector</div>
+					<div id="wallet-connector" class="status-value">-</div>
 
 					<div class="status-label">Network</div>
 					<div id="wallet-network" class="status-value">-</div>
@@ -345,7 +348,9 @@
 					</button>
 				</div>
 
-				<h3 style="font-size: 1.25rem; font-weight: 600; margin-top: 2rem; margin-bottom: 1rem;">Available Wallets</h3>
+				<h3 style="font-size: 1.25rem; font-weight: 600; margin-top: 2rem; margin-bottom: 1rem">
+					Available Wallets
+				</h3>
 				<div id="available-connectors-list" class="network-list">
 					<!-- Connectors will be listed here -->
 				</div>
@@ -357,16 +362,14 @@
 
 				<div class="network-list">
 					<div class="network-item">
-						<div class="network-info" style="grid-column: 1 / -1;">
+						<div class="network-info" style="grid-column: 1 / -1">
 							<div class="network-name">1. Add Custom Network</div>
-							<div class="network-chain-id">
-								Add a custom network and see it appear in the list
-							</div>
+							<div class="network-chain-id">Add a custom network and see it appear in the list</div>
 						</div>
 					</div>
 
 					<div class="network-item">
-						<div class="network-info" style="grid-column: 1 / -1;">
+						<div class="network-info" style="grid-column: 1 / -1">
 							<div class="network-name">2. Disable Current Network</div>
 							<div class="network-chain-id">
 								Connect to a wallet, then disable the current network. The wallet will auto-switch.
@@ -375,7 +378,7 @@
 					</div>
 
 					<div class="network-item">
-						<div class="network-info" style="grid-column: 1 / -1;">
+						<div class="network-info" style="grid-column: 1 / -1">
 							<div class="network-name">3. Update Network RPC</div>
 							<div class="network-chain-id">
 								Change a network's RPC and see the connection refresh
@@ -384,7 +387,7 @@
 					</div>
 
 					<div class="network-item">
-						<div class="network-info" style="grid-column: 1 / -1;">
+						<div class="network-info" style="grid-column: 1 / -1">
 							<div class="network-name">4. Delete Current Network</div>
 							<div class="network-chain-id">
 								Delete the network you're connected to. The wallet will auto-switch or disconnect.
@@ -396,9 +399,31 @@
 		</div>
 
 		<!-- Add Network Modal -->
-		<div id="add-network-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center;">
-			<div style="background: var(--bg-card); padding: 2rem; border-radius: 12px; max-width: 500px; width: 90%;">
-				<h3 style="margin-bottom: 1.5rem;">Add Custom Network</h3>
+		<div
+			id="add-network-modal"
+			style="
+				display: none;
+				position: fixed;
+				top: 0;
+				left: 0;
+				right: 0;
+				bottom: 0;
+				background: rgba(0, 0, 0, 0.7);
+				z-index: 1000;
+				align-items: center;
+				justify-content: center;
+			"
+		>
+			<div
+				style="
+					background: var(--bg-card);
+					padding: 2rem;
+					border-radius: 12px;
+					max-width: 500px;
+					width: 90%;
+				"
+			>
+				<h3 style="margin-bottom: 1.5rem">Add Custom Network</h3>
 
 				<div class="form-group">
 					<label class="form-label">Network Name</label>
@@ -417,10 +442,15 @@
 
 				<div class="form-group">
 					<label class="form-label">RPC Endpoints</label>
-					<div id="rpc-endpoints-list" style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.5rem;">
+					<div
+						id="rpc-endpoints-list"
+						style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.5rem"
+					>
 						<!-- RPC endpoints will be added here -->
 					</div>
-					<button type="button" id="add-rpc-btn" class="secondary small" style="width: 100%;">+ Add RPC</button>
+					<button type="button" id="add-rpc-btn" class="secondary small" style="width: 100%">
+						+ Add RPC
+					</button>
 				</div>
 
 				<div class="form-group">
@@ -436,11 +466,42 @@
 		</div>
 
 		<!-- QR Code Modal for WalletConnect -->
-		<div id="qr-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center;">
-			<div style="background: var(--bg-card); padding: 2rem; border-radius: 12px; text-align: center; border: 1px solid var(--border-color);">
-				<h3 style="margin-bottom: 1rem;">Scan with WalletConnect</h3>
-				<div id="qr-code" style="background: white; padding: 1rem; border-radius: 8px; margin: 1rem 0; display: inline-block;"></div>
-				<button id="qr-close" class="secondary" style="width: 100%;">Close</button>
+		<div
+			id="qr-modal"
+			style="
+				display: none;
+				position: fixed;
+				top: 0;
+				left: 0;
+				right: 0;
+				bottom: 0;
+				background: rgba(0, 0, 0, 0.7);
+				z-index: 1000;
+				align-items: center;
+				justify-content: center;
+			"
+		>
+			<div
+				style="
+					background: var(--bg-card);
+					padding: 2rem;
+					border-radius: 12px;
+					text-align: center;
+					border: 1px solid var(--border-color);
+				"
+			>
+				<h3 style="margin-bottom: 1rem">Scan with WalletConnect</h3>
+				<div
+					id="qr-code"
+					style="
+						background: white;
+						padding: 1rem;
+						border-radius: 8px;
+						margin: 1rem 0;
+						display: inline-block;
+					"
+				></div>
+				<button id="qr-close" class="secondary" style="width: 100%">Close</button>
 			</div>
 		</div>
 
