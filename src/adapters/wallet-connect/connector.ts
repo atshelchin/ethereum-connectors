@@ -121,9 +121,9 @@ export class WalletConnectConnector extends BaseConnector {
 					currentChainId = chainId;
 
 					// After switching chain, get accounts again as they might have changed
-					accounts = await this.provider.request({
+					accounts = (await this.provider.request({
 						method: 'eth_accounts'
-					});
+					})) as unknown as Address[];
 
 					// If still no accounts after switch, it means this network doesn't have accounts
 					if (!accounts || accounts.length === 0) {
@@ -136,9 +136,9 @@ export class WalletConnectConnector extends BaseConnector {
 						try {
 							await this.switchChain(currentChainId);
 							// Get accounts again on original chain
-							accounts = await this.provider.request({
+							accounts = (await this.provider.request({
 								method: 'eth_accounts'
-							});
+							})) as unknown as Address[];
 						} catch (switchBackError) {
 							console.error('[WalletConnect] Failed to switch back:', switchBackError);
 						}
@@ -154,9 +154,9 @@ export class WalletConnectConnector extends BaseConnector {
 				console.log('[WalletConnect] No accounts found, trying Ethereum mainnet as fallback');
 				try {
 					await this.switchChain(1); // Ethereum mainnet
-					accounts = await this.provider.request({
+					accounts = (await this.provider.request({
 						method: 'eth_accounts'
-					});
+					})) as unknown as Address[];
 					currentChainId = 1;
 				} catch (mainnetError) {
 					console.error('[WalletConnect] Failed to switch to mainnet:', mainnetError);
@@ -233,9 +233,9 @@ export class WalletConnectConnector extends BaseConnector {
 			throw new Error('Provider not available');
 		}
 
-		const accounts = await this.provider.request({
+		const accounts = (await this.provider.request({
 			method: 'eth_accounts'
-		}) as Address[];
+		})) as unknown as Address[];
 
 		return accounts || [];
 	}
@@ -299,9 +299,9 @@ export class WalletConnectConnector extends BaseConnector {
 			});
 
 			// Check if there are accounts on the new chain
-			const accounts = await this.provider.request({
+			const accounts = (await this.provider.request({
 				method: 'eth_accounts'
-			}) as Address[];
+			})) as unknown as Address[];
 
 			if (!accounts || accounts.length === 0) {
 				console.warn('[WalletConnect] No accounts on chain', chainId);
