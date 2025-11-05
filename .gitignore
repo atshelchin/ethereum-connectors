@@ -26,3 +26,4 @@ coverage
 .VSCodeCounter
 .claude
 build
+dist
