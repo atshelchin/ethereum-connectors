@@ -215,13 +215,36 @@ export class WalletConnectionManager implements ConnectionManager {
 		}
 
 		try {
-			// 尝试重新连接
-			console.log('[Manager] Attempting to reconnect...');
-			await this.connect(connector, persisted.chainId);
-			console.log('[Manager] Reconnection successful');
+			// 恢复连接状态（不重新连接，只获取当前状态）
+			console.log('[Manager] Restoring connection state...');
+
+			// 获取当前状态
+			const [address, addresses, chainId] = await Promise.all([
+				connector.getAccount(),
+				connector.getAccounts(),
+				connector.getChainId()
+			]);
+
+			// 获取支持的链列表（转换为 chainId 数组）
+			const supportedChains = connector.getSupportedChains();
+			const chains = supportedChains || this.chains.map((chain) => chain.id);
+
+			// 更新状态
+			this.updateState({
+				isConnected: true,
+				isConnecting: false,
+				address,
+				addresses,
+				chainId,
+				chains,
+				connector,
+				error: undefined
+			});
+
+			console.log('[Manager] Connection state restored successfully');
 			return true;
 		} catch (error) {
-			console.log('[Manager] Reconnection failed:', error);
+			console.log('[Manager] Failed to restore connection state:', error);
 			this.storage.clear();
 			return false;
 		}
