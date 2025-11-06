@@ -47,6 +47,16 @@ export class WalletConnectionManager implements ConnectionManager {
 	registerConnector(connector: Connector): void {
 		this.connectors.set(connector.id, connector);
 
+		// 确保新注册的连接器使用当前的 chains
+		// 这对于动态注册的连接器（如 EIP6963）非常重要
+		if (
+			'updateSupportedChains' in connector &&
+			typeof connector.updateSupportedChains === 'function'
+		) {
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-call
+			connector.updateSupportedChains(this.chains);
+		}
+
 		// 设置连接器事件监听
 		connector.on('connected', ({ address, addresses, chainId, chains }) => {
 			this.updateState({
