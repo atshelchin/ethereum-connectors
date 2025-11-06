@@ -97,6 +97,18 @@ export abstract class BaseConnector implements Connector {
 	protected getChain(chainId: number): Chain | undefined {
 		return this.chains.find((chain) => chain.id === chainId);
 	}
+
+	/**
+	 * 更新支持的链列表（内部方法）
+	 *
+	 * 此方法用于动态更新连接器支持的链。
+	 * 通常由 IntegratedManager 调用，当应用的网络配置发生变化时。
+	 *
+	 * @internal
+	 */
+	updateSupportedChains(chains: Chain[]): void {
+		this.chains = chains;
+	}
 	/**
 	 * 获取底层 EIP-1193 Provider 实例
 	 *

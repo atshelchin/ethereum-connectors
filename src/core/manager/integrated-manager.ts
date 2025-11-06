@@ -236,12 +236,17 @@ export class IntegratedManager {
 		const state = this.walletManager.getState();
 		const currentConnector = state.connector;
 
-		// 更新所有连接器的内部 chains（通过访问 protected 属性）
+		// 更新所有连接器的内部 chains（使用 BaseConnector 的 updateSupportedChains 方法）
 		this.walletManager.getConnectors().forEach((connector) => {
-			// TypeScript 类型断言：BaseConnector 有 protected chains 属性
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-			(connector as any).chains = chains;
-			console.log(`[IntegratedManager] Updated internal chains for: ${connector.name}`);
+			// 所有连接器都继承自 BaseConnector，都有 updateSupportedChains 方法
+			if (
+				'updateSupportedChains' in connector &&
+				typeof connector.updateSupportedChains === 'function'
+			) {
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-call
+				connector.updateSupportedChains(chains);
+				console.log(`[IntegratedManager] Updated internal chains for: ${connector.name}`);
+			}
 		});
 
 		// 只对当前已连接的连接器调用 updateChains()（触发重新初始化）
