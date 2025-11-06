@@ -86,6 +86,13 @@ export interface ConnectionManager {
 	disconnect(): Promise<void>;
 
 	/**
+	 * 取消正在进行的连接
+	 *
+	 * 用于取消连接过程中的操作（如关闭 WalletConnect QR 码弹窗）
+	 */
+	cancelConnect(): void;
+
+	/**
 	 * 自动连接（从本地存储恢复）
 	 */
 	autoConnect(): Promise<boolean>;

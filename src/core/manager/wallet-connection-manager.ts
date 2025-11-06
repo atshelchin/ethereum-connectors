@@ -176,6 +176,43 @@ export class WalletConnectionManager implements ConnectionManager {
 	}
 
 	/**
+	 * 取消正在进行的连接
+	 *
+	 * 用于取消连接过程中的操作（如关闭 WalletConnect QR 码弹窗）
+	 * 将状态重置为未连接状态
+	 */
+	cancelConnect(): void {
+		if (!this.state.isConnecting) {
+			console.log('[Manager] No connection in progress to cancel');
+			return;
+		}
+
+		console.log('[Manager] Cancelling connection attempt');
+
+		// 如果有正在连接的连接器，尝试断开
+		if (this.state.connector) {
+			// 异步断开，但不等待结果
+			void this.state.connector.disconnect().catch((error) => {
+				console.warn('[Manager] Error disconnecting during cancel:', error);
+			});
+		}
+
+		// 重置为初始状态
+		this.updateState({
+			isConnected: false,
+			isConnecting: false,
+			address: undefined,
+			addresses: undefined,
+			chainId: undefined,
+			chains: undefined,
+			connector: undefined,
+			error: undefined
+		});
+
+		console.log('[Manager] Connection cancelled');
+	}
+
+	/**
 	 * 自动连接（从本地存储恢复）
 	 */
 	async autoConnect(): Promise<boolean> {
