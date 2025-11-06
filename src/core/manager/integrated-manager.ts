@@ -39,6 +39,10 @@ export class IntegratedManager {
 		// 创建钱包管理器
 		this.walletManager = new WalletConnectionManager(connectors, chains);
 
+		// 确保所有连接器的 chains 与当前启用的网络同步
+		// 这很重要：传入的 connectors 可能使用了不同的 chains 列表
+		this.updateWalletManagerChains();
+
 		// 设置事件监听
 		this.setupNetworkManagerListeners();
 		this.setupWalletManagerListeners();
