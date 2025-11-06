@@ -230,10 +230,13 @@ export class WalletConnectionManager implements ConnectionManager {
 			const chains = supportedChains || this.chains.map((chain) => chain.id);
 
 			// 更新状态
+			// 如果持久化的地址仍在可用地址列表中，使用它；否则使用连接器返回的默认地址
+			const restoredAddress = addresses.includes(persisted.address) ? persisted.address : address;
+
 			this.updateState({
 				isConnected: true,
 				isConnecting: false,
-				address,
+				address: restoredAddress,
 				addresses,
 				chainId,
 				chains,
